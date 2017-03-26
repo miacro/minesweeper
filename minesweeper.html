@@ -9,12 +9,17 @@
   </head>
   <body>
     <div id="root"></div>
+    <div id="root2"></div>
+    <script type="text/babel" src="js/component/block.js">
     <script type="text/babel">
-
       ReactDOM.render(
-        <h1>Hello, world!</h1>,
+        <Block onClick={()=>{alert("haha")}}/>,
         document.getElementById('root')
       );
+     // ReactDOM.render(
+     //   <h1>hello world</h1>,
+     //   document.getElementById('root2')
+     // );
 
     </script>
   </body>

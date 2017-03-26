@@ -1,0 +1,36 @@
+---
+Language:                       JavaScript
+BasedOnStyle:                   Google
+ColumnLimit:                    80
+UseTab:                         Never
+TabWidth:                       2
+IndentWidth:                    2
+ContinuationIndentWidth:        2
+AlignAfterOpenBracket:          Align
+AlignOperands:                  true
+AlignEscapedNewlinesLeft:       true
+AlignTrailingComments:          true
+AllowShortBlocksOnASingleLine:  false
+AllowShortCaseLabelsOnASingleLine:    false
+AllowShortFunctionsOnASingleLine:     false
+AllowShortIfStatementsOnASingleLine:  false
+AllowShortLoopsOnASingleLine:   false
+BinPackArguments:               true
+BreakBeforeBinaryOperators:     NonAssignment
+BreakBeforeBraces:              Attach
+BraceWrapping:
+  AfterControlStatement: true
+  AfterFunction: true
+  BeforeCatch: true
+  BeforeElse: true
+BreakBeforeTernaryOperators:    true
+JavaScriptQuotes:               Leave
+MaxEmptyLinesToKeep:            3
+ReflowComments:                 true
+SpaceBeforeParens:              ControlStatements
+SpacesInContainerLiterals:      false
+SpacesInParentheses:            false
+SpacesInSquareBrackets:         false
+Standard:                       Auto
+...
+
