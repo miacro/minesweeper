@@ -1,4 +1,4 @@
-class Board extends React.Component {
+class Minefield extends React.Component {
     render() {
         return (
             <div>

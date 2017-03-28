@@ -1,4 +1,4 @@
-class Block extends React.Component {
+class Cell extends React.Component {
   render() {
         return (
           <button className = "block"
