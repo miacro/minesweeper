@@ -16,7 +16,8 @@ class Minefield extends React.Component {
         dimension.height = this.props.dimension.height;
       }
     }
-    var columns = [];
+    var minefield = [];
+    var rowStyle = {height: 45};
     for (var i = 0; i < dimension.height; ++i) {
       var row = [];
       for (var j = 0; j < dimension.width; ++j) {
@@ -24,8 +25,14 @@ class Minefield extends React.Component {
         var onClick = this.onCellClick.bind(this, j, i);
         row.push(<Cell onClick={onClick} key={key}/>);
       }
-      columns.push(<div key={i.toString()}>{row}</div>);
+      minefield.push(<div style={rowStyle} key={i.toString()}>{row}</div>);
     }
-    return (<div>{columns}</div>);
+    var minefieldStyle = { marginLeft: "auto", 
+                           marginRight: "auto", 
+                           width: 1350, 
+                           height: 720,
+                           marginTop: "auto",
+                           marginBottom: "auto" };
+    return (<div style={minefieldStyle} className="minefield">{minefield}</div>);
   };
 };
