@@ -3,8 +3,8 @@ class Minefield extends React.Component {
     super();
     this.onCellClick = this.onCellClick.bind(this); 
   };
-  onCellClick(e){
-    console.log(e.target.value);
+  onCellClick(x, y, e){
+    alert(x + "-" + y);
   };
   render() {
     var dimension = {width: 30, height: 16};
@@ -21,7 +21,8 @@ class Minefield extends React.Component {
       var row = [];
       for (var j = 0; j < dimension.width; ++j) {
         var key = i +"-" + j;
-        row.push(<Cell onClick={this.onCellClick} key={key}/>);
+        var onClick = this.onCellClick.bind(this, j, i);
+        row.push(<Cell onClick={onClick} key={key}/>);
       }
       columns.push(<div key={i.toString()}>{row}</div>);
     }
