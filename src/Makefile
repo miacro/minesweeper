@@ -20,4 +20,8 @@ install-module:
 init:
 	npm install
 
+all:
+	@  ${MAKE} init \
+	&& ${MAKE} install
+
 .PHONY: all install init
