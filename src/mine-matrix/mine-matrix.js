@@ -13,4 +13,4 @@ class MineMatrix {
   };
 
 };
-export MineMatrix;
+export default MineMatrix;

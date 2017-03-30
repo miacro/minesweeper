@@ -3,9 +3,8 @@
   <head>
     <meta charset="UTF-8" />
     <title>Minesweeper</title>
-    <script src="js/node_modules/react/dist/react.js"></script>
-    <script src="js/node_modules/react-dom/dist/react-dom.js"></script>
-    <script src="js/node_modules/babel-standalone/babel.min.js"></script>
+    <script src="js/modules/react/dist/react.min.js"></script>
+    <script src="js/modules/react-dom/dist/react-dom.min.js"></script>
     <link rel="stylesheet" type="text/css" href="css/cell.css" />
     <link rel="stylesheet" type="text/css" href="css/minefield.css" />
     <style type="text/css">
@@ -14,13 +13,8 @@
   </head>
   <body>
     <div id="root"></div>
-    <script type="text/babel" src="js/component/cell.js"></script>
-    <script type="text/babel" src="js/component/minefield.js"></script>
-    <script type="text/babel">
-      ReactDOM.render(
-        <Minefield />,
-        document.getElementById('root')
-      );
-    </script>
+    <script src="js/component/cell.js"></script>
+    <script src="js/component/minefield.js"></script>
+    <script src="js/init.js"></script>
   </body>
 </html>
