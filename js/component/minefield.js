@@ -27,12 +27,13 @@ class Minefield extends React.Component {
       }
       minefield.push(<div style={rowStyle} key={i.toString()}>{row}</div>);
     }
-    var minefieldStyle = { marginLeft: "auto", 
-                           marginRight: "auto", 
+    var minefieldStyle = { left: "50%", 
+                           marginLeft: -675, 
                            width: 1350, 
-                           height: 720,
-                           marginTop: "auto",
-                           marginBottom: "auto" };
+                           top: "50%",
+                           marginTop: -360,
+                           position: "absolute",
+                           height: 720 };
     return (<div style={minefieldStyle} className="minefield">{minefield}</div>);
   };
 };
