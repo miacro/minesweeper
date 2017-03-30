@@ -10,8 +10,9 @@ MODULE_FILE=""
 install:
 	@  ${MAKE} clean \
 	&& npm run build \
-	&& ${MAKE} MODULE_CATE=/react/dist MODULE_FILE=react.min.js install-module \
-	&& ${MAKE} MODULE_CATE=/react-dom/dist MODULE_FILE=react-dom.min.js install-module 
+	&& ${MAKE} MODULE_CATE=react/dist MODULE_FILE=react.min.js install-module \
+	&& ${MAKE} MODULE_CATE=react-dom/dist MODULE_FILE=react-dom.min.js install-module \
+	&& ${MAKE} MODULE_CATE=babel-polyfill/dist MODULE_FILE=polyfill.min.js install-module 
 
 install-module:
 	@  [[ -d ${INSTALL_MODULE_PREFIX}/${MODULE_CATE} ]] \
