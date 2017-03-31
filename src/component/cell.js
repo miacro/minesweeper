@@ -1,3 +1,4 @@
+import React from "react";
 class Cell extends React.Component {
   render() {
         return (
@@ -6,3 +7,4 @@ class Cell extends React.Component {
                   onClick = {this.props.onClick} />);
     };
 };
+export default Cell;

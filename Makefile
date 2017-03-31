@@ -1,7 +1,7 @@
 CURRENT_DIR=`pwd`
 SHELL=/bin/bash
 MAKE=make --no-print-directory
-TARGET=""
+TARGET=install
 
 install:
 	@  ${MAKE} -C ${CURRENT_DIR}/src ${TARGET}

@@ -1,3 +1,5 @@
+import Cell from "./cell";
+import React from "react";
 class Minefield extends React.Component {
   constructor(){
     super();
@@ -37,3 +39,4 @@ class Minefield extends React.Component {
     return (<div style={minefieldStyle} className="minefield">{minefield}</div>);
   };
 };
+export default Minefield;
