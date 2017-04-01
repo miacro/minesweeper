@@ -14,7 +14,12 @@ class Minefield extends React.Component {
       for (let x = 0; x < matrix.xAxisLength; ++x) {
         var key = x +"-" + y;
         var onClick = onCellClick.bind(this, x, y);
-        var text = matrix.getMatrix()[y][x].isMine() ? "*" : "0";
+        var text;
+        if(matrix.getMatrix()[y][x].isMine()){
+          text  = "*";
+        } else {
+          text = matrix.calculateAround(x, y);
+        }
         var state = "open";
         if(matrix.getMatrix()[y][x].isOpen()){
          state = "closed";

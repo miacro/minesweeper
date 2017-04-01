@@ -61,6 +61,31 @@ MineMatrix.prototype.getMatrix = function() {
   return this.matrix;
 };
 
+MineMatrix.prototype.calculateAround = function(x, y) {
+  var countYAxis = (x) => {
+    var count = 0;
+    if (this.matrix[y][x].isMine()) {
+      count++;
+    }
+    if (y > 0 && this.matrix[y - 1][x].isMine()) {
+      count++;
+    }
+    if (y < (this.yAxisLength - 1) && this.matrix[y + 1][x].isMine()) {
+      count++;
+    }
+    return count;
+  };
+  var count = 0;
+  if (x > 0) {
+    count += countYAxis(x - 1);
+  }
+  count += countYAxis(x);
+  if (x < (this.xAxisLength - 1)) {
+    count += countYAxis(x + 1);
+  }
+  return count;
+};
+
 MineMatrix.prototype.distributeMines = function(count) {
   var random = () => {
     return Math.floor(Math.random() * this.xAxisLength * this.yAxisLength);
