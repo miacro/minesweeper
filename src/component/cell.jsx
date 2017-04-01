@@ -33,4 +33,13 @@ Cell.defaultProps = {
     fontSize: 30
   }
 };
+Cell.propTypes = {
+  style: React.PropTypes.object,
+  state: React.PropTypes.string,
+  text: React.PropTypes.oneOfType([
+    React.PropTypes.string,
+    React.PropTypes.number,
+    React.PropTypes.bool]),
+  onClick: React.PropTypes.func
+};
 export default Cell;

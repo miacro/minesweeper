@@ -39,4 +39,9 @@ class Minefield extends React.Component {
     return (<div style={minefieldStyle} className="minefield">{minefield}</div>);
   };
 };
+
+Minefield.propTypes = {
+  matrix: React.PropTypes.instanceOf(MineMatrix),
+  onCellClick: React.PropTypes.func
+};
 export default Minefield;

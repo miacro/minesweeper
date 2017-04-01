@@ -23,4 +23,9 @@ class Gameboard extends React.Component {
     return <Minefield matrix={matrix} onCellClick={onCellClick}/>;
   }
 };
+
+Gameboard.propTypes = {
+  xAxisLength: React.PropTypes.number,
+  yAxisLength: React.PropTypes.number
+};
 export default Gameboard;
