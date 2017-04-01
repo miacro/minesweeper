@@ -11,6 +11,10 @@ install:
 	@  ${MAKE} clean \
 	&& npm run webpack 
 
+install-debug:
+	@  ${MAKE} clean \
+	&& npm run webpack-debug
+
 install-module:
 	@  [[ -d ${INSTALL_MODULE_PREFIX}/${MODULE_CATE} ]] \
 	|| mkdir -p ${INSTALL_MODULE_PREFIX}/${MODULE_CATE} \

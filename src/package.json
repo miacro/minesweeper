@@ -30,6 +30,7 @@
   },
   "scripts": {
     "babel": "babel . --ignore node_modules,webpack.config.js -d ../js",
-    "webpack": "webpack --config webpack.config.js -p"
+    "webpack": "webpack --config webpack.config.js -p",
+    "webpack-debug": "webpack --config webpack.config.js"
   }
 }

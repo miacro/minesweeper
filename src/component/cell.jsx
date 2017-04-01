@@ -4,7 +4,9 @@ class Cell extends React.Component {
         return (
           <button className = "cell"
                   style = {this.props.style}
-                  onClick = {this.props.onClick} />);
+                  onClick = {this.props.onClick}>
+            {this.props.name}
+          </button>);
     };
 };
 export default Cell;
