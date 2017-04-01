@@ -30,7 +30,9 @@ Cell.defaultProps = {
     borderRadius: 4,
     border: "1px solid #333",
     boxShadow: "inset 0 0 5px 5px #ccc",
-    fontSize: 30
+    fontSize: 30,
+    width: 45,
+    height: 45
   }
 };
 Cell.propTypes = {
