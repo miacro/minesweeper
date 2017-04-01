@@ -20,6 +20,9 @@ class Minefield extends React.Component {
         } else {
           text = matrix.calculateAround(x, y);
         }
+        if (! matrix.getMatrix()[y][x].isOpen()) {
+          text = ""; 
+        }
         var state = "open";
         if(matrix.getMatrix()[y][x].isOpen()){
          state = "closed";
