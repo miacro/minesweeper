@@ -10,11 +10,7 @@ class Cell extends React.Component {
     if (state == "open") {
       style.backgroundColor = "rgba(17, 45, 13, 0.92)";
     } else {
-      style = {
-        borderRadius: 4,
-        border: "1px solid #333",
-        boxShadow: "inset 0 0 5px 5px #ccc"
-      };
+      style.backgroundColor = "rgba(245, 245, 245, 0.921569)";
     }
     if (this.props.style){
       style = extend(style, this.props.style);
@@ -26,5 +22,15 @@ class Cell extends React.Component {
         {this.props.text}
       </button>);
   };
+};
+
+Cell.defaultProps = {
+  style: {
+    backgroundColor : "rgba(17, 45, 13, 0.92)",
+    borderRadius: 4,
+    border: "1px solid #333",
+    boxShadow: "inset 0 0 5px 5px #ccc",
+    fontSize: 30
+  }
 };
 export default Cell;

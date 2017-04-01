@@ -6,31 +6,17 @@ class Minefield extends React.Component {
     super();
   };
   render() {
-    var dimension = {xAxisLength: 30, yAxisLength: 16};
-    if (this.props.dimension) {
-      if (this.props.dimension.xAxisLength != undefined) {
-        dimension.xAxisLength = this.props.dimension.xAxisLength;
-      }
-      if (this.props.dimension.yAxisLength != undefined) {
-        dimension.yAxisLength = this.props.dimension.yAxisLength;
-      }
-    }
-    var mineMatrix = new MineMatrix({xAxisLength: dimension.xAxisLength,
-                                     yAxisLength: dimension.yAxisLength,
-                                     mineCount: 99});
-    var matrix = mineMatrix.getMatrix();
-    var onCellClick = (x, y)=>{
-      alert("("+x+","+y+")--" + matrix[y][x].isMine());
-    };
+    var matrix = this.props.matrix;
+    var onCellClick = this.props.onCellClick;
     let minefield = [];
-    for (let y = 0; y < dimension.yAxisLength; ++y) {
+    for (let y = 0; y < matrix.yAxisLength; ++y) {
       let row = [];
-      for (let x = 0; x < dimension.xAxisLength; ++x) {
+      for (let x = 0; x < matrix.xAxisLength; ++x) {
         var key = x +"-" + y;
         var onClick = onCellClick.bind(this, x, y);
-        var text = matrix[y][x].isMine() ? "*" : "0";
+        var text = matrix.getMatrix()[y][x].isMine() ? "*" : "0";
         var state = "open";
-        if(matrix[y][x].isMine()){
+        if(matrix.getMatrix()[y][x].isOpen()){
          state = "closed";
         }
         row.push(<Cell onClick={onClick} key={key} text={text} state={state}/>);
