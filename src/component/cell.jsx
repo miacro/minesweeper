@@ -7,10 +7,11 @@ class Cell extends React.Component {
       state = this.props.state;
     }
     var style = {};
+    style = extend(style, Cell.defaultProps.style);
     if (state == "open") {
-      style.backgroundColor = "rgba(17, 45, 13, 0.92)";
+      style = extend(style, Cell.style.open);
     } else {
-      style.backgroundColor = "rgba(245, 245, 245, 0.921569)";
+      style = extend(style, Cell.style.closed);
     }
     if (this.props.style){
       style = extend(style, this.props.style);
@@ -24,19 +25,34 @@ class Cell extends React.Component {
   };
 };
 
-Cell.defaultProps = {
-  style: {
-    backgroundColor : "rgba(17, 45, 13, 0.92)",
+Cell.style = {
+  open: {
+    backgroundColor : "rgba(13, 29, 74, 0.921569)",
     borderRadius: 4,
-    border: "1px solid #333",
-    boxShadow: "inset 0 0 5px 5px #ccc",
+    border: "1px solid rgb(11, 2, 35)",
+    boxShadow: "inset 0 0 4px 4px rgb(10, 5, 47)",
     fontSize: 32,
-    padding: 7,
+    padding: 0,
+    margin: 0,
+    textAlign: "center",
+    width: 45,
+    height: 45
+  },
+  closed: {
+    backgroundColor : "rgb(181, 187, 206)",
+    borderRadius: 4,
+    border: "1px solid rgb(11, 2, 35)",
+    boxShadow: "inset 0 0 4px 4px rgb(225, 227, 234)",
+    fontSize: 32,
+    padding: 0,
     margin: 0,
     textAlign: "center",
     width: 45,
     height: 45
   }
+};
+
+Cell.defaultProps = {
 };
 Cell.propTypes = {
   style: React.PropTypes.object,

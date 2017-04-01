@@ -27,9 +27,14 @@ class Minefield extends React.Component {
         if(matrix.getMatrix()[y][x].isOpen()){
          state = "closed";
         }
-        row.push(<Cell onClick={onClick} key={key} text={text} state={state}/>);
+        const cellStyle = {position: "absolute", left: x * 45};
+        row.push(<Cell style={cellStyle} 
+                       onClick={onClick} 
+                       key={key} 
+                       text={text} 
+                       state={state}/>);
       }
-      const rowStyle = {height: 45};
+      const rowStyle = {height: 45, position: "absolute", top: y * 45};
       minefield.push(<div style={rowStyle} key={y.toString()}>{row}</div>);
     }
     var minefieldStyle = { left: "50%", 
