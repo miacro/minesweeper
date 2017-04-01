@@ -20,7 +20,7 @@ class Minefield extends React.Component {
                                      mineCount: 99});
     var matrix = mineMatrix.getMatrix();
     var onCellClick = (x, y)=>{
-      alert(matrix[y][x].isMine());
+      alert("("+x+","+y+")--" + matrix[y][x].isMine());
     };
     let minefield = [];
     for (let y = 0; y < dimension.yAxisLength; ++y) {
@@ -28,8 +28,12 @@ class Minefield extends React.Component {
       for (let x = 0; x < dimension.xAxisLength; ++x) {
         var key = x +"-" + y;
         var onClick = onCellClick.bind(this, x, y);
-        var name = matrix[y][x].isMine() ? "*" : "0";
-        row.push(<Cell onClick={onClick} key={key} name={name}/>);
+        var text = matrix[y][x].isMine() ? "*" : "0";
+        var state = "open";
+        if(matrix[y][x].isMine()){
+         state = "closed";
+        }
+        row.push(<Cell onClick={onClick} key={key} text={text} state={state}/>);
       }
       const rowStyle = {height: 45};
       minefield.push(<div style={rowStyle} key={y.toString()}>{row}</div>);

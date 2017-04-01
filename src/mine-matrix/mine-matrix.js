@@ -1,19 +1,19 @@
 "use strict";
 var MineCell = function() {
   this.mine = false;
-  this.opened = false;
+  this.open = false;
 };
 
-MineCell.prototype.setOpened = function(state) {
-  this.opened = true;
+MineCell.prototype.setOpen = function(state) {
+  this.open = true;
   if (state !== undefined) {
-    this.opened = state;
+    this.open = state;
   };
-  return this.opened;
+  return this.open;
 };
 
-MineCell.prototype.isOpened = function() {
-  return this.opened ? true : false;
+MineCell.prototype.isOpen = function() {
+  return this.open ? true : false;
 };
 
 MineCell.prototype.setMine = function(state) {
@@ -47,9 +47,9 @@ var MineMatrix = function(params) {
     let row = [];
     for (let x = 0; x < this.xAxisLength; ++x) {
       row.push(new MineCell());
-    };
+    }
     this.matrix.push(row);
-  };
+  }
   if (params.mineCount != undefined) {
     this.distributeMines(params.mineCount);
   }
@@ -73,7 +73,7 @@ MineMatrix.prototype.distributeMines = function(count) {
       mineMap[index.toString()] = true;
       currentCount++;
     }
-  };
+  }
 
   for (let i in mineMap) {
     const y = Math.floor(i / this.xAxisLength);
@@ -90,9 +90,9 @@ MineMatrix.prototype.format = function() {
       } else {
         formatString += " -";
       }
-    };
+    }
     formatString += "\n";
-  };
+  }
   return formatString;
 };
 
