@@ -9,9 +9,9 @@ class Minefield extends React.Component {
     var matrix = this.props.matrix;
     var onCellClick = this.props.onCellClick;
     let minefield = [];
-    for (let y = 0; y < matrix.yAxisLength; ++y) {
+    for (let y = 0; y < matrix.getYAxisLength(); ++y) {
       let row = [];
-      for (let x = 0; x < matrix.xAxisLength; ++x) {
+      for (let x = 0; x < matrix.getXAxisLength(); ++x) {
         var key = x +"-" + y;
         var onClick = onCellClick.bind(this, x, y);
         var text;

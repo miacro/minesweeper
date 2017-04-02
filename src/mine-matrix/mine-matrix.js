@@ -34,13 +34,22 @@ MineCell.prototype.isMine = function(state) {
  * @param mineCount
  */
 var MineMatrix = function(params) {
+  this.matrix = [];
+  this.xAxisLength = 0;
+  this.yAxisLength = 0;
+  if (params) {
+    this.init(params);
+  }
+};
+
+MineMatrix.MineCell = MineCell;
+MineMatrix.prototype.init = function(params) {
   if (!params.xAxisLength) {
     throw new Error("no xAxisLength");
   }
   if (!params.yAxisLength) {
     throw new Error("no yAxisLength");
   }
-  this.matrix = [];
   this.xAxisLength = params.xAxisLength;
   this.yAxisLength = params.yAxisLength;
   for (let y = 0; y < this.yAxisLength; ++y) {
@@ -55,10 +64,32 @@ var MineMatrix = function(params) {
   }
 };
 
-MineMatrix.MineCell = MineCell;
-
 MineMatrix.prototype.getMatrix = function() {
   return this.matrix;
+};
+MineMatrix.prototype.setMatrix = function(cellMatrix, xAxisLength,
+                                          yAxisLength) {
+  this.matrix = cellMatrix;
+  if (xAxisLength) {
+    this.xAxisLength = xAxisLength;
+    this.yAxisLength = yAxisLength;
+  }
+  return this.matrix;
+};
+
+MineMatrix.prototype.getXAxisLength = function() {
+  return this.xAxisLength;
+};
+MineMatrix.prototype.getYAxisLength = function() {
+  return this.yAxisLength;
+};
+
+MineMatrix.prototype.duplicate = function(other) {
+  if (other === undefined) {
+    other = new MineMatrix();
+  }
+  other.setMatrix(this.getMatrix(), this.xAxisLength, this.yAxisLength);
+  return other;
 };
 
 MineMatrix.prototype.calculateAround = function(x, y) {

@@ -25,7 +25,7 @@ class Gameboard extends React.Component {
   }
   onCellClick(x, y) {
       this.state.matrix.getMatrix()[y][x].setOpen(true);
-      this.setState({matrix: this.state.matrix});
+      this.setState({matrix: this.state.matrix.duplicate()});
   }
   render() {
     return <Minefield matrix={this.state.matrix} 
