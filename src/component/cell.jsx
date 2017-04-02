@@ -20,7 +20,7 @@ class Cell extends React.Component {
       <button className = "cell"
               style = {style}
               onClick = {this.props.onClick}>
-        {this.props.text}
+        {this.props.children}
       </button>);
   };
 };

@@ -31,8 +31,9 @@ class Minefield extends React.Component {
         row.push(<Cell style={cellStyle} 
                        onClick={onClick} 
                        key={key} 
-                       text={text} 
-                       state={state}/>);
+                       state={state}>
+                   {text}
+                 </Cell>);
       }
       const rowStyle = {height: 45, position: "absolute", top: y * 45};
       minefield.push(<div style={rowStyle} key={y.toString()}>{row}</div>);
