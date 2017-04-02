@@ -137,9 +137,13 @@ MineMatrix.prototype.openAround = function(x, y) {
       return;
     }
     openAround(x - 1, y);
-    openAround(x + 1, y);
+    openAround(x - 1, y - 1);
+    openAround(x - 1, y + 1);
     openAround(x, y - 1);
     openAround(x, y + 1);
+    openAround(x + 1, y);
+    openAround(x + 1, y - 1);
+    openAround(x + 1, y + 1);
   };
   return openAround(x, y);
 };
