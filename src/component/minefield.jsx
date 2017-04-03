@@ -18,7 +18,7 @@ class Minefield extends React.Component {
         if(matrix.getMatrix()[y][x].isMine()){
           text  = "*";
         } else {
-          text = matrix.calculateAround(x, y);
+          text = matrix.calculateAround(x, y).mine;
         }
         if (! matrix.getMatrix()[y][x].isOpen() || text === 0) {
           text = ""; 

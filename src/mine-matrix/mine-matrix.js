@@ -2,6 +2,7 @@
 var MineCell = function() {
   this.mine = false;
   this.open = false;
+  this.flag = false;
 };
 
 MineCell.prototype.setOpen = function(state) {
@@ -14,6 +15,18 @@ MineCell.prototype.setOpen = function(state) {
 
 MineCell.prototype.isOpen = function() {
   return this.open ? true : false;
+};
+
+MineCell.prototype.setFlag = function(state) {
+  this.flag = true;
+  if (state !== undefined) {
+    this.flag = state;
+  };
+  return this.flag;
+};
+
+MineCell.prototype.isFlag = function() {
+  return this.flag ? true : false;
 };
 
 MineCell.prototype.setMine = function(state) {
@@ -93,26 +106,48 @@ MineMatrix.prototype.duplicate = function(other) {
 };
 
 MineMatrix.prototype.calculateAround = function(x, y) {
+  var count = {mine: 0, flag: 0, open: 0};
   var countYAxis = (x) => {
-    var count = 0;
+    /// mine
     if (this.matrix[y][x].isMine()) {
-      count++;
+      count.mine++;
     }
     if (y > 0 && this.matrix[y - 1][x].isMine()) {
-      count++;
+      count.mine++;
     }
     if (y < (this.yAxisLength - 1) && this.matrix[y + 1][x].isMine()) {
-      count++;
+      count.mine++;
+    }
+
+    /// flag
+    if (this.matrix[y][x].isFlag()) {
+      count.flag++;
+    }
+    if (y > 0 && this.matrix[y - 1][x].isFlag()) {
+      count.flag++;
+    }
+    if (y < (this.yAxisLength - 1) && this.matrix[y + 1][x].isFlag()) {
+      count.flag++;
+    }
+
+    /// open
+    if (this.matrix[y][x].isOpen()) {
+      count.open++;
+    }
+    if (y > 0 && this.matrix[y - 1][x].isOpen()) {
+      count.open++;
+    }
+    if (y < (this.yAxisLength - 1) && this.matrix[y + 1][x].isOpen()) {
+      count.open++;
     }
     return count;
   };
-  var count = 0;
   if (x > 0) {
-    count += countYAxis(x - 1);
+    countYAxis(x - 1);
   }
-  count += countYAxis(x);
+  countYAxis(x);
   if (x < (this.xAxisLength - 1)) {
-    count += countYAxis(x + 1);
+    countYAxis(x + 1);
   }
   return count;
 };
@@ -133,7 +168,7 @@ MineMatrix.prototype.openBlank = function(x, y) {
     }
     this.matrix[y][x].setOpen(true);
 
-    if (this.calculateAround(x, y) > 0) {
+    if (this.calculateAround(x, y).mine > 0) {
       return;
     }
     openBlank(x - 1, y);
@@ -148,8 +183,19 @@ MineMatrix.prototype.openBlank = function(x, y) {
   return openBlank(x, y);
 };
 
-MineMatrix.prototype.openAround = function(x, y){
-
+MineMatrix.prototype.openAround = function(x, y) {
+  var count = this.calculateAround(x, y);
+  if (count.flag != count.mine) {
+  //  return;
+  }
+  this.openBlank(x - 1, y);
+  this.openBlank(x - 1, y - 1);
+  this.openBlank(x - 1, y + 1);
+  this.openBlank(x, y - 1);
+  this.openBlank(x, y + 1);
+  this.openBlank(x + 1, y);
+  this.openBlank(x + 1, y - 1);
+  this.openBlank(x + 1, y + 1);
 };
 
 MineMatrix.prototype.distributeMines = function(count) {
