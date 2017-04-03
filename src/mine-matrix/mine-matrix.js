@@ -10,6 +10,9 @@ MineCell.prototype.setOpen = function(state) {
   if (state !== undefined) {
     this.open = state;
   };
+  if (this.open) {
+    this.flag = false;
+  }
   return this.open;
 };
 
@@ -22,6 +25,9 @@ MineCell.prototype.setFlag = function(state) {
   if (state !== undefined) {
     this.flag = state;
   };
+  if (this.open) {
+    this.flag = false;
+  }
   return this.flag;
 };
 
