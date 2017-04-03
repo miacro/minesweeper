@@ -189,19 +189,60 @@ MineMatrix.prototype.openBlank = function(x, y) {
   return openBlank(x, y);
 };
 
+MineMatrix.prototype.openCell = function(x, y) {
+  var result = {error: false};
+  if (x < 0 || x >= this.xAxisLength) {
+    return result;
+  }
+  if (y < 0 || y >= this.yAxisLength) {
+    return result;
+  }
+
+  if (this.matrix[y][x].isFlag()) {
+    return result;
+  }
+  if (this.matrix[y][x].isMine()) {
+    this.matrix[y][x].setOpen(true);
+    result.error = true;
+    return result;
+  }
+  if (this.matrix[y][x].isOpen()) {
+    return result;
+  }
+  this.openBlank(x, y);
+  return result;
+};
+
 MineMatrix.prototype.openAround = function(x, y) {
   var count = this.calculateAround(x, y);
   if (count.flag != count.mine) {
     return;
   }
-  this.openBlank(x - 1, y);
-  this.openBlank(x - 1, y - 1);
-  this.openBlank(x - 1, y + 1);
-  this.openBlank(x, y - 1);
-  this.openBlank(x, y + 1);
-  this.openBlank(x + 1, y);
-  this.openBlank(x + 1, y - 1);
-  this.openBlank(x + 1, y + 1);
+  var result = [];
+  result.push(this.openCell(x - 1, y));
+  result.push(this.openCell(x - 1, y - 1));
+  result.push(this.openCell(x - 1, y + 1));
+  result.push(this.openCell(x, y - 1));
+  result.push(this.openCell(x, y + 1));
+  result.push(this.openCell(x + 1, y));
+  result.push(this.openCell(x + 1, y - 1));
+  result.push(this.openCell(x + 1, y + 1));
+  if (result[0].error || result[1].error || result[2].error || result[3].error
+      || result[4].error || result[5].error || result[6].error
+      || result[7].error) {
+    return {
+      error: true
+    }
+  };
+  return {error: false};
+};
+
+MineMatrix.prototype.openAll = function() {
+  for (let y = 0; y < this.yAxisLength; ++y) {
+    for (let x = 0; x < this.xAxisLength; ++x) {
+      this.matrix[y][x].setOpen(true);
+    }
+  }
 };
 
 MineMatrix.prototype.distributeMines = function(count) {

@@ -17,6 +17,7 @@ class Gameboard extends React.Component {
       mineCount = this.props.mineCount;
     }
     this.state = {};
+    this.state.error = false;
     this.state.matrix = new MineMatrix({
       xAxisLength: xAxisLength,
       yAxisLength: yAxisLength,
@@ -26,23 +27,33 @@ class Gameboard extends React.Component {
     this.onCellDoubleClick = this.onCellDoubleClick.bind(this);
   }
   onCellClick(x, y) {
-    this.state.matrix.openBlank(x, y);
-    this.setState({matrix: this.state.matrix.duplicate()});
+    console.log(this.state.matrix.getMatrix()[y][x]);
+    if (!this.state.error) {
+      var result =  this.state.matrix.openCell(x, y);
+      this.setState({matrix: this.state.matrix.duplicate(),
+                     error: result.error});
+    }
   }
   onCellDoubleClick(x, y) {
-    this.state.matrix.openAround(x, y);
-    this.setState({matrix: this.state.matrix.duplicate()});
+    if (!this.state.error) {
+      var result = this.state.matrix.openAround(x, y);
+      this.setState({matrix: this.state.matrix.duplicate(),
+                     error: result.error});
+    }
   }
   onCellRightClick(x, y) {
-    this.state.matrix.getMatrix()[y][x].setFlag(
-      !this.state.matrix.getMatrix()[y][x].isFlag());
-    this.setState({matrix: this.state.matrix.duplicate()});
+    if (!this.state.error) {
+      this.state.matrix.getMatrix()[y][x].setFlag(
+        !this.state.matrix.getMatrix()[y][x].isFlag());
+      this.setState({matrix: this.state.matrix.duplicate()});
+    }
   }
   render() {
-  const style = {width: 1350, height: 720};
+  const style = {width: 1500, height: 800};
     return <Minefield matrix={this.state.matrix} 
                       onCellClick={this.onCellClick}
                       style={style}
+                      error={this.state.error}
                       onCellRightClick={this.onCellRightClick}
                       onCellDoubleClick={this.onCellDoubleClick}/>;
   }

@@ -26,27 +26,32 @@ class Minefield extends React.Component {
         var onClick = this.props.onCellClick.bind(this, x, y);
         var onRightClick = this.props.onCellRightClick.bind(this, x, y);
         var onDoubleClick = this.props.onCellDoubleClick.bind(this, x, y);
-        var text;
+        let cellStyle = { position: "absolute", 
+                          left: x * style.cellWidth,
+                          width: style.cellWidth,
+                          height: style.cellHeight};
+        var text = matrix.calculateAround(x, y).mine || undefined;
         if(matrix.getMatrix()[y][x].isMine()){
           text  = "*";
-        } else {
-          text = matrix.calculateAround(x, y).mine;
         }
-        if (! matrix.getMatrix()[y][x].isOpen() || text === 0) {
-          text = ""; 
+        if (this.props.error) {
+          cellStyle.backgroundColor = "rgb(180, 180, 180)";
+          if (matrix.getMatrix()[y][x].isMine() && matrix.getMatrix()[y][x].isOpen()) {
+            cellStyle.backgroundColor = "rgb(117, 27, 27)";
+          }
+        } else {
+          if (! matrix.getMatrix()[y][x].isOpen()) {
+            text = ""; 
+          }
+        }
+        if (matrix.getMatrix()[y][x].isFlag()) {
+          cellStyle.backgroundColor = "rgb(62, 119, 27)";
         }
         var state = "open";
         if (matrix.getMatrix()[y][x].isOpen()) {
           state = "closed";
         }
-        const cellStyle = { position: "absolute", 
-                            left: x * style.cellWidth,
-                            width: style.cellWidth,
-                            height: style.cellHeight};
-        if (matrix.getMatrix()[y][x].isFlag() && !matrix.getMatrix()[y][x].isOpen()) {
-          text = "";
-          cellStyle.backgroundColor = "red";
-        }
+        
         row.push(<Cell style={cellStyle} 
                        onClick={onClick} 
                        onRightClick={onRightClick} 
