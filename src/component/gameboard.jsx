@@ -39,8 +39,10 @@ class Gameboard extends React.Component {
     this.setState({matrix: this.state.matrix.duplicate()});
   }
   render() {
+  const style = {width: 1350, height: 720};
     return <Minefield matrix={this.state.matrix} 
                       onCellClick={this.onCellClick}
+                      style={style}
                       onCellRightClick={this.onCellRightClick}
                       onCellDoubleClick={this.onCellDoubleClick}/>;
   }

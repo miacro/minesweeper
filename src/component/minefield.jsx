@@ -7,6 +7,17 @@ class Minefield extends React.Component {
   };
   render() {
     var matrix = this.props.matrix;
+    var style = {width: Minefield.style.width, height: Minefield.style.height};
+    if (this.props.style) {
+      if (this.props.style.width) {
+        style.width = this.props.style.width;
+      }
+      if (this.props.style.height) {
+        style.height = this.props.style.height;
+      }
+    }
+    style.cellWidth = style.width / matrix.getXAxisLength();
+    style.cellHeight = style.height / matrix.getYAxisLength();
     let minefield = [];
     for (let y = 0; y < matrix.getYAxisLength(); ++y) {
       let row = [];
@@ -28,7 +39,10 @@ class Minefield extends React.Component {
         if (matrix.getMatrix()[y][x].isOpen()) {
           state = "closed";
         }
-        const cellStyle = {position: "absolute", left: x * 45};
+        const cellStyle = { position: "absolute", 
+                            left: x * style.cellWidth,
+                            width: style.cellWidth,
+                            height: style.cellHeight};
         if (matrix.getMatrix()[y][x].isFlag() && !matrix.getMatrix()[y][x].isOpen()) {
           text = "";
           cellStyle.backgroundColor = "red";
@@ -42,24 +56,33 @@ class Minefield extends React.Component {
                    {text}
                  </Cell>);
       }
-      const rowStyle = {height: 45, position: "absolute", top: y * 45};
+      const rowStyle = {  height: style.cellHeight, 
+                          position: "absolute", 
+                          top: y * style.cellHeight,
+                          height: style.cellHeight};
       minefield.push(<div style={rowStyle} key={y.toString()}>{row}</div>);
     }
     var minefieldStyle = { left: "50%", 
-                           marginLeft: -675, 
-                           width: 1350, 
+                           marginLeft: style.width * -0.5, 
+                           width: style.width, 
                            top: "50%",
-                           marginTop: -360,
+                           marginTop: style.height * -0.5,
                            position: "absolute",
-                           height: 720 };
+                           height: style.height };
     return (<div style={minefieldStyle} className="minefield">{minefield}</div>);
   };
 };
 
 Minefield.propTypes = {
   matrix: React.PropTypes.instanceOf(MineMatrix),
+  style: React.PropTypes.object,
   onCellClick: React.PropTypes.func,
   onCellRightClick: React.PropTypes.func,
   onCellDoubleClick: React.PropTypes.func
+};
+
+Minefield.style = {
+  width: 1350,
+  height: 720
 };
 export default Minefield;

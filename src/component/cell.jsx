@@ -25,6 +25,7 @@ class Cell extends React.Component {
     if (this.props.style){
       style = extend(style, this.props.style);
     }
+    style.fontSize = style.height * 2 / 3;
     return (
       <button className = "cell"
               style = {style}
