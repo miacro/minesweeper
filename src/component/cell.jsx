@@ -19,7 +19,8 @@ class Cell extends React.Component {
     return (
       <button className = "cell"
               style = {style}
-              onClick = {this.props.onClick}>
+              onClick = {this.props.onClick}
+              onDoubleClick = {this.props.onDoubleClick}>
         {this.props.children}
       </button>);
   };
@@ -61,6 +62,7 @@ Cell.propTypes = {
     React.PropTypes.string,
     React.PropTypes.number,
     React.PropTypes.bool]),
-  onClick: React.PropTypes.func
+  onClick: React.PropTypes.func,
+  onDoubleClick: React.PropTypes.func
 };
 export default Cell;

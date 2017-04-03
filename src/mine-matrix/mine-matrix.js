@@ -117,8 +117,8 @@ MineMatrix.prototype.calculateAround = function(x, y) {
   return count;
 };
 
-MineMatrix.prototype.openAround = function(x, y) {
-  var openAround = (x, y) => {
+MineMatrix.prototype.openBlank = function(x, y) {
+  var openBlank = (x, y) => {
     if (x < 0 || x >= this.xAxisLength) {
       return;
     }
@@ -136,16 +136,20 @@ MineMatrix.prototype.openAround = function(x, y) {
     if (this.calculateAround(x, y) > 0) {
       return;
     }
-    openAround(x - 1, y);
-    openAround(x - 1, y - 1);
-    openAround(x - 1, y + 1);
-    openAround(x, y - 1);
-    openAround(x, y + 1);
-    openAround(x + 1, y);
-    openAround(x + 1, y - 1);
-    openAround(x + 1, y + 1);
+    openBlank(x - 1, y);
+    openBlank(x - 1, y - 1);
+    openBlank(x - 1, y + 1);
+    openBlank(x, y - 1);
+    openBlank(x, y + 1);
+    openBlank(x + 1, y);
+    openBlank(x + 1, y - 1);
+    openBlank(x + 1, y + 1);
   };
-  return openAround(x, y);
+  return openBlank(x, y);
+};
+
+MineMatrix.prototype.openAround = function(x, y){
+
 };
 
 MineMatrix.prototype.distributeMines = function(count) {
