@@ -1,6 +1,15 @@
 import React from "react";
 import extend from "extend";
 class Cell extends React.Component {
+  constructor(props) {
+    super(props);
+    this.onMouseDown = this.onMouseDown.bind(this);
+  };
+  onMouseDown(e) {
+    if (e.button == 2) {
+      return this.props.onRightClick(e);
+    }
+  }
   render() {
     var state = "open";
     if (this.props.state == "closed"){
@@ -20,6 +29,7 @@ class Cell extends React.Component {
       <button className = "cell"
               style = {style}
               onClick = {this.props.onClick}
+              onMouseDown = {this.onMouseDown}
               onDoubleClick = {this.props.onDoubleClick}>
         {this.props.children}
       </button>);
@@ -63,6 +73,7 @@ Cell.propTypes = {
     React.PropTypes.number,
     React.PropTypes.bool]),
   onClick: React.PropTypes.func,
-  onDoubleClick: React.PropTypes.func
+  onDoubleClick: React.PropTypes.func,
+  onRightClick: React.PropTypes.func
 };
 export default Cell;

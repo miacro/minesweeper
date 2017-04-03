@@ -186,7 +186,7 @@ MineMatrix.prototype.openBlank = function(x, y) {
 MineMatrix.prototype.openAround = function(x, y) {
   var count = this.calculateAround(x, y);
   if (count.flag != count.mine) {
-  //  return;
+    return;
   }
   this.openBlank(x - 1, y);
   this.openBlank(x - 1, y - 1);

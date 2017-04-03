@@ -13,6 +13,7 @@ class Minefield extends React.Component {
       for (let x = 0; x < matrix.getXAxisLength(); ++x) {
         var key = x +"-" + y;
         var onClick = this.props.onCellClick.bind(this, x, y);
+        var onRightClick = this.props.onCellRightClick.bind(this, x, y);
         var onDoubleClick = this.props.onCellDoubleClick.bind(this, x, y);
         var text;
         if(matrix.getMatrix()[y][x].isMine()){
@@ -24,12 +25,17 @@ class Minefield extends React.Component {
           text = ""; 
         }
         var state = "open";
-        if(matrix.getMatrix()[y][x].isOpen()){
-         state = "closed";
+        if (matrix.getMatrix()[y][x].isOpen()) {
+          state = "closed";
         }
         const cellStyle = {position: "absolute", left: x * 45};
+        if (matrix.getMatrix()[y][x].isFlag() && !matrix.getMatrix()[y][x].isOpen()) {
+          text = "";
+          cellStyle.backgroundColor = "red";
+        }
         row.push(<Cell style={cellStyle} 
                        onClick={onClick} 
+                       onRightClick={onRightClick} 
                        onDoubleClick={onDoubleClick} 
                        key={key} 
                        state={state}>
@@ -53,6 +59,7 @@ class Minefield extends React.Component {
 Minefield.propTypes = {
   matrix: React.PropTypes.instanceOf(MineMatrix),
   onCellClick: React.PropTypes.func,
+  onCellRightClick: React.PropTypes.func,
   onCellDoubleClick: React.PropTypes.func
 };
 export default Minefield;

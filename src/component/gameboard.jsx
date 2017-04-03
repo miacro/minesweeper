@@ -22,21 +22,26 @@ class Gameboard extends React.Component {
       yAxisLength: yAxisLength,
       mineCount: mineCount});
     this.onCellClick = this.onCellClick.bind(this);
+    this.onCellRightClick = this.onCellRightClick.bind(this);
     this.onCellDoubleClick = this.onCellDoubleClick.bind(this);
   }
   onCellClick(x, y) {
-    console.log("click" + new Date().getTime());
     this.state.matrix.openBlank(x, y);
     this.setState({matrix: this.state.matrix.duplicate()});
   }
   onCellDoubleClick(x, y) {
-    console.log("dbclick" + new Date().getTime());
     this.state.matrix.openAround(x, y);
+    this.setState({matrix: this.state.matrix.duplicate()});
+  }
+  onCellRightClick(x, y) {
+    this.state.matrix.getMatrix()[y][x].setFlag(
+      !this.state.matrix.getMatrix()[y][x].isFlag());
     this.setState({matrix: this.state.matrix.duplicate()});
   }
   render() {
     return <Minefield matrix={this.state.matrix} 
                       onCellClick={this.onCellClick}
+                      onCellRightClick={this.onCellRightClick}
                       onCellDoubleClick={this.onCellDoubleClick}/>;
   }
 };
