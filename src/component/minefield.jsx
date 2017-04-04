@@ -35,9 +35,9 @@ class Minefield extends React.Component {
           text  = "*";
         }
         if (this.props.error) {
-          cellStyle.backgroundColor = "rgb(180, 180, 180)";
+          cellStyle.background = "rgb(180, 180, 180)";
           if (matrix.getMatrix()[y][x].isMine() && matrix.getMatrix()[y][x].isOpen()) {
-            cellStyle.backgroundColor = "rgb(117, 27, 27)";
+            cellStyle.background = "rgb(117, 27, 27)";
           }
         } else {
           if (! matrix.getMatrix()[y][x].isOpen()) {
@@ -45,10 +45,10 @@ class Minefield extends React.Component {
           }
         }
         if (matrix.getMatrix()[y][x].isFlag()) {
-          cellStyle.backgroundColor = "rgb(62, 119, 27)";
+          cellStyle.background = "rgb(255, 129, 0)";
         }
         var state = "open";
-        if (matrix.getMatrix()[y][x].isOpen()) {
+        if (! matrix.getMatrix()[y][x].isOpen()) {
           state = "closed";
         }
         

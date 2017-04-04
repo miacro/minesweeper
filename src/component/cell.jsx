@@ -25,6 +25,7 @@ class Cell extends React.Component {
       style = extend(style, Cell.style.open);
     } else {
       style = extend(style, Cell.style.closed);
+      style.background = "radial-gradient(at 20px 20px, rgb(101, 210, 145), rgb(61, 140, 93), rgb(16, 35, 24))";
     }
     if (this.props.style){
       style = extend(style, this.props.style);
@@ -42,13 +43,11 @@ class Cell extends React.Component {
 };
 
 Cell.style = {
-  open: {
-    backgroundColor : "rgba(13, 29, 74, 0.921569)",
-    // background:"radial-gradient(at 20px 20px,#FFF,#CCC,#FFF)",
-    // background:"-webkit-radial-gradient(20px 20px,#FFF,#CCC,#FFF)",
+  closed: {
+    background : "rgba(13, 29, 74, 0.921569)",
     borderRadius: 4,
     border: "1px solid rgb(11, 2, 35)",
-    boxShadow: "inset 0 0 4px 4px rgb(10, 5, 47)",
+    boxShadow: "inset 0 0 4px 4px rgb(23, 93, 51)",
     fontSize: 32,
     padding: 0,
     margin: 0,
@@ -56,8 +55,8 @@ Cell.style = {
     width: 45,
     height: 45
   },
-  closed: {
-    backgroundColor : "rgb(181, 187, 206)",
+  open: {
+    background : "rgb(181, 187, 206)",
     borderRadius: 4,
     border: "1px solid rgb(11, 2, 35)",
     boxShadow: "inset 0 0 4px 4px rgb(225, 227, 234)",
