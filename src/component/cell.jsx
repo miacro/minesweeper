@@ -44,6 +44,8 @@ class Cell extends React.Component {
 Cell.style = {
   open: {
     backgroundColor : "rgba(13, 29, 74, 0.921569)",
+    // background:"radial-gradient(at 20px 20px,#FFF,#CCC,#FFF)",
+    // background:"-webkit-radial-gradient(20px 20px,#FFF,#CCC,#FFF)",
     borderRadius: 4,
     border: "1px solid rgb(11, 2, 35)",
     boxShadow: "inset 0 0 4px 4px rgb(10, 5, 47)",
