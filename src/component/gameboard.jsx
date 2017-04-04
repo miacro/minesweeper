@@ -26,30 +26,33 @@ class Gameboard extends React.Component {
     this.onCellRightClick = this.onCellRightClick.bind(this);
     this.onCellDoubleClick = this.onCellDoubleClick.bind(this);
   }
-  onCellClick(x, y) {
+  onCellClick(x, y, e) {
     console.log(this.state.matrix.getMatrix()[y][x]);
     if (!this.state.error) {
       var result =  this.state.matrix.openCell(x, y);
       this.setState({matrix: this.state.matrix.duplicate(),
                      error: result.error});
     }
+    e.preventDefault();
   }
-  onCellDoubleClick(x, y) {
+  onCellDoubleClick(x, y, e) {
+    e.preventDefault();
     if (!this.state.error) {
       var result = this.state.matrix.openAround(x, y);
       this.setState({matrix: this.state.matrix.duplicate(),
                      error: result.error});
     }
   }
-  onCellRightClick(x, y) {
+  onCellRightClick(x, y, e) {
     if (!this.state.error) {
       this.state.matrix.getMatrix()[y][x].setFlag(
         !this.state.matrix.getMatrix()[y][x].isFlag());
       this.setState({matrix: this.state.matrix.duplicate()});
     }
+    e.preventDefault();
   }
   render() {
-  const style = {width: 1500, height: 800};
+  const style = {width: 1350, height: 720};
     return <Minefield matrix={this.state.matrix} 
                       onCellClick={this.onCellClick}
                       style={style}
