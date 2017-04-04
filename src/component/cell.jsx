@@ -9,6 +9,10 @@ class Cell extends React.Component {
     if (e.button == 2) {
       return this.props.onRightClick(e);
     }
+
+    if (e.button == 0) {
+      return this.props.onClick(e);
+    }
   }
   render() {
     var state = "open";
@@ -29,7 +33,7 @@ class Cell extends React.Component {
     return (
       <button className = "cell"
               style = {style}
-              onClick = {this.props.onClick}
+              onClick = {this.onClick}
               onMouseDown = {this.onMouseDown}
               onDoubleClick = {this.props.onDoubleClick}>
         {this.props.children}
