@@ -31,32 +31,27 @@ class Minefield extends React.Component {
                           width: style.cellWidth,
                           height: style.cellHeight};
         var text = matrix.calculateAround(x, y).mine || undefined;
-        if(matrix.getMatrix()[y][x].isMine()){
+        if (matrix.getMatrix()[y][x].isMine()){
           text  = "*";
         }
+        if (!matrix.getMatrix()[y][x].isOpen()) {
+          text = "";
+        }
+
+        var state = "process";
         if (this.props.error) {
-          cellStyle.background = "rgb(180, 180, 180)";
-          if (matrix.getMatrix()[y][x].isMine() && matrix.getMatrix()[y][x].isOpen()) {
-            cellStyle.background = "rgb(117, 27, 27)";
+          state = "end";
+          if (matrix.getMatrix()[y][x].isMine()) {
+            text = "*";
           }
-        } else {
-          if (! matrix.getMatrix()[y][x].isOpen()) {
-            text = ""; 
-          }
-        }
-        if (matrix.getMatrix()[y][x].isFlag()) {
-          cellStyle.background = "rgb(255, 129, 0)";
-        }
-        var state = "open";
-        if (! matrix.getMatrix()[y][x].isOpen()) {
-          state = "closed";
         }
         
         row.push(<Cell style={cellStyle} 
                        onClick={onClick} 
                        onRightClick={onRightClick} 
                        onDoubleClick={onDoubleClick} 
-                       key={key} 
+                       key={key}
+                       cell={matrix.getMatrix()[y][x]}
                        state={state}>
                    {text}
                  </Cell>);
