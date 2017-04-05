@@ -47,15 +47,17 @@ class Cell extends React.Component {
       let center = {x : style.width / 2, y: style.height / 2};
       style.background = "radial-gradient(at " + center.x + "px " + center.y 
                             + "px , rgb(101, 210, 145), rgb(61, 140, 93), rgb(16, 35, 24))";
-      if (state == "process") {
-      } else {
-        style.background = ""
-      }
     } 
     if (cell.isFlag()) {
       style.background = "rgb(255, 129, 0)";
     }
-    style.fontSize = style.height * 2 / 3;
+    if (cell.isMine()) {
+      style.color = "#FF5722";
+      style.fontWeight = "900";
+      style.fontSize = style.height * 1.2;
+    } else  {
+      style.fontSize = style.height * 2 / 3;
+    }
     return style;
   } 
   render() {
