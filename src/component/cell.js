@@ -1,6 +1,8 @@
-import React from "react";
 import extend from "extend";
+import React from "react";
+
 import MineMatrix from "../mine-matrix";
+
 class Cell extends React.Component {
   constructor(props) {
     super(props);
@@ -18,7 +20,7 @@ class Cell extends React.Component {
   getStyle(state, cell) {
     const defaultStyle = {
       closed: {
-        background : "rgba(13, 29, 74, 0.921569)",
+        background: "rgba(13, 29, 74, 0.921569)",
         borderRadius: 4,
         border: "1px solid rgb(11, 2, 35)",
         boxShadow: "inset 0 0 4px 4px rgb(23, 93, 51)",
@@ -26,7 +28,7 @@ class Cell extends React.Component {
         height: 45
       },
       open: {
-        background : "rgb(181, 187, 206)",
+        background: "rgb(181, 187, 206)",
         borderRadius: 4,
         border: "1px solid rgb(11, 2, 35)",
         boxShadow: "inset 0 0 4px 4px rgb(225, 227, 234)",
@@ -41,13 +43,14 @@ class Cell extends React.Component {
       if (state == "process") {
       } else if (state == "end") {
         style.background = "rgb(180, 180, 180)";
-      } 
+      }
     } else {
       style = extend(style, defaultStyle.closed);
-      let center = {x : style.width / 2, y: style.height / 2};
-      style.background = "radial-gradient(at " + center.x + "px " + center.y 
-                            + "px , rgb(101, 210, 145), rgb(61, 140, 93), rgb(16, 35, 24))";
-    } 
+      let center = {x: style.width / 2, y: style.height / 2};
+      style.background =
+        "radial-gradient(at " + center.x + "px " + center.y
+        + "px , rgb(101, 210, 145), rgb(61, 140, 93), rgb(16, 35, 24))";
+    }
     if (cell.isFlag()) {
       style.background = "rgb(255, 129, 0)";
     }
@@ -55,28 +58,27 @@ class Cell extends React.Component {
       style.color = "#FF5722";
       style.fontWeight = "900";
       style.fontSize = style.height * 1.2;
-    } else  {
+    } else {
       style.fontSize = style.height * 2 / 3;
     }
     return style;
-  } 
+  }
   render() {
     var state = "open";
     var style = this.getStyle(this.props.state, this.props.cell);
     style = extend(style, this.props.style);
-    return (
-      <button className = "cell"
-              style = {style}
-              onClick = {this.onClick}
-              onMouseDown = {this.onMouseDown}
-              onDoubleClick = {this.props.onDoubleClick}>
-        {this.props.children}
-      </button>);
+    return React.createElement("button", {
+      className: "cell",
+      style: style,
+      onClick: this.props.onClick,
+      onMouseDown: this.onMouseDown,
+      onDoubleClick: this.props.onDoubleClick
+    },
+                               this.props.children);
   };
 };
 
-Cell.defaultProps = {
-};
+Cell.defaultProps = {};
 Cell.propTypes = {
   state: React.PropTypes.string,
   style: React.PropTypes.object,

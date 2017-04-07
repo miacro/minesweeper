@@ -1,11 +1,6 @@
 SHELL=/bin/bash
 MAKE=make --no-print-directory
-
-INSTALL_PREFIX=`pwd`/../js
-INSTALL_MODULE_PREFIX=${INSTALL_PREFIX}/modules
-MODULES_PREFIX=`pwd`/node_modules
-MODULE_CATE=""
-MODULE_FILE=""
+FORMAT_CODE=`pwd`/bin/format-code.sh -l javascript
 
 install:
 	@  ${MAKE} clean \
@@ -15,11 +10,8 @@ install-debug:
 	@  ${MAKE} clean \
 	&& npm run webpack-debug
 
-install-module:
-	@  [[ -d ${INSTALL_MODULE_PREFIX}/${MODULE_CATE} ]] \
-	|| mkdir -p ${INSTALL_MODULE_PREFIX}/${MODULE_CATE} \
-	&& cp ${MODULES_PREFIX}/${MODULE_CATE}/${MODULE_FILE} \
-	      ${INSTALL_MODULE_PREFIX}/${MODULE_CATE}/${MODULE_FILE}
+code-format:
+	@  ${FORMAT_CODE} component mine-matrix init.js webpack.config.js
 
 init:
 	npm install
@@ -31,4 +23,4 @@ all:
 clean:
 	@ rm -rf ${INSTALL_PREFIX}
 
-.PHONY: all install init clean
+.PHONY: all install init clean code-format

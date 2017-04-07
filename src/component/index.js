@@ -1,6 +1,7 @@
 import Cell from "./cell";
-import Minefield from "./minefield";
 import Gameboard from "./gameboard";
+import Minefield from "./minefield";
+
 var Component = {};
 Component.Cell = Cell;
 Component.Minefield = Minefield;

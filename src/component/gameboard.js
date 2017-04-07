@@ -2,7 +2,7 @@ import React from "react";
 import MineMatrix from "../mine-matrix";
 import Minefield from "./minefield";
 class Gameboard extends React.Component {
-  constructor(props){
+  constructor(props) {
     super(props);
     var xAxisLength = 30;
     var yAxisLength = 16;
@@ -21,7 +21,8 @@ class Gameboard extends React.Component {
     this.state.matrix = new MineMatrix({
       xAxisLength: xAxisLength,
       yAxisLength: yAxisLength,
-      mineCount: mineCount});
+      mineCount: mineCount
+    });
     this.onCellClick = this.onCellClick.bind(this);
     this.onCellRightClick = this.onCellRightClick.bind(this);
     this.onCellDoubleClick = this.onCellDoubleClick.bind(this);
@@ -29,9 +30,9 @@ class Gameboard extends React.Component {
   onCellClick(x, y, e) {
     console.log(this.state.matrix.getMatrix()[y][x]);
     if (!this.state.error) {
-      var result =  this.state.matrix.openCell(x, y);
-      this.setState({matrix: this.state.matrix.duplicate(),
-                     error: result.error});
+      var result = this.state.matrix.openCell(x, y);
+      this.setState(
+        {matrix: this.state.matrix.duplicate(), error: result.error});
     }
     e.preventDefault();
   }
@@ -39,8 +40,8 @@ class Gameboard extends React.Component {
     e.preventDefault();
     if (!this.state.error) {
       var result = this.state.matrix.openAround(x, y);
-      this.setState({matrix: this.state.matrix.duplicate(),
-                     error: result.error});
+      this.setState(
+        {matrix: this.state.matrix.duplicate(), error: result.error});
     }
   }
   onCellRightClick(x, y, e) {
@@ -52,13 +53,16 @@ class Gameboard extends React.Component {
     e.preventDefault();
   }
   render() {
-  const style = {width: 1350, height: 720};
-    return <Minefield matrix={this.state.matrix} 
-                      onCellClick={this.onCellClick}
-                      style={style}
-                      error={this.state.error}
-                      onCellRightClick={this.onCellRightClick}
-                      onCellDoubleClick={this.onCellDoubleClick}/>;
+    const style = {width: 1350, height: 720};
+    return React.createElement(Minefield, {
+      matrix: this.state.matrix,
+      onCellClick: this.onCellClick,
+      style: style,
+      error: this.state.error,
+      onCellRightClick: this.onCellRightClick,
+      onCellDoubleClick: this.onCellDoubleClick
+    },
+                               null);
   }
 };
 
