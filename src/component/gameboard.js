@@ -1,6 +1,7 @@
 import React from "react";
 import MineMatrix from "../mine-matrix";
 import Minefield from "./minefield";
+import TextCell from "./text-cell";
 class Gameboard extends React.Component {
   constructor(props) {
     super(props);
@@ -54,15 +55,18 @@ class Gameboard extends React.Component {
   }
   render() {
     const style = {width: 1350, height: 720};
-    return React.createElement(Minefield, {
+    var elementMinefield = React.createElement(Minefield, {
       matrix: this.state.matrix,
       onCellClick: this.onCellClick,
       style: style,
+      key: "minefield",
       error: this.state.error,
       onCellRightClick: this.onCellRightClick,
       onCellDoubleClick: this.onCellDoubleClick
     },
-                               null);
+                                               null);
+    var elementTimer = React.createElement(TextCell, {key: "timer"}, "1");
+    return React.createElement("div", null, [elementMinefield, elementTimer]);
   }
 };
 
