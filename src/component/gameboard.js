@@ -65,8 +65,8 @@ class Gameboard extends React.Component {
       onCellDoubleClick: this.onCellDoubleClick
     },
                                                null);
-    var elementTimer = React.createElement(TextCell, {key: "timer"}, "1");
-    return React.createElement("div", null, [elementMinefield, elementTimer]);
+    // var elementTimer = React.createElement(TextCell, {key: "timer"}, "1");
+    return React.createElement("div", null, [elementMinefield]);
   }
 };
 
