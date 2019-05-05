@@ -16,8 +16,7 @@
   "babel": {
     "presets": [
       "react",
-      "env",
-      "es2015"
+      "env"
     ]
   },
   "env": {
