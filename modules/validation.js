@@ -7,7 +7,7 @@ export const BOARD_LIMITS = {
 };
 
 const MAX_FILE_BYTES = 2 * 1024 * 1024;
-const MAX_HISTORY_RECORDS = 5000;
+export const MAX_HISTORY_RECORDS = 5000;
 const LEVEL_IDS = new Set(['beginner', 'intermediate', 'expert', 'custom']);
 const LEVEL_LABELS = new Set(['beginner', 'intermediate', 'expert', 'custom']);
 const STANDARD_LEVELS = {
@@ -47,6 +47,8 @@ export function validateGameSnapshot(input) {
 
   const settings = validateSettings(input.settings);
   const { rows, cols, mines } = settings;
+  const noGuess = input.noGuess === undefined ? false : validateBoolean(input.noGuess);
+  const noFlag = input.noFlag === undefined ? false : validateBoolean(input.noFlag);
   const currentLevel = input.currentLevel === undefined ? 'custom' : input.currentLevel;
   if (!LEVEL_IDS.has(currentLevel)) throw new Error('Invalid difficulty');
   const standard = STANDARD_LEVELS[currentLevel];
@@ -97,6 +99,7 @@ export function validateGameSnapshot(input) {
     const flagged = validateBoolean(cell.flagged);
     const questioned = validateBoolean(cell.questioned);
     const exploded = validateBoolean(cell.exploded);
+    if (noFlag && (flagged || questioned)) throw new Error('No-flag games cannot contain marks');
     if (flagged && questioned) throw new Error('A cell cannot be both flagged and questioned');
     if (revealed && (flagged || questioned)) throw new Error('A revealed cell cannot be marked');
     if (revealed && mineKeys.has(key)) throw new Error('An active game cannot contain a revealed mine');
@@ -119,6 +122,8 @@ export function validateGameSnapshot(input) {
   return {
     settings,
     currentLevel,
+    noGuess,
+    noFlag,
     elapsedMs: Math.floor(rawElapsedMs),
     lastMineLayout,
     cells,
@@ -134,6 +139,8 @@ function validateHistoryRecord(record) {
   }
 
   const settings = validateSettings(record);
+  const noGuess = record.noGuess === undefined ? false : validateBoolean(record.noGuess);
+  const noFlag = record.noFlag === undefined ? false : validateBoolean(record.noFlag);
   const { seconds } = record;
   const timestamp = Number.isFinite(record.timestamp) ? record.timestamp : Date.parse(record.time);
   if (!isIntegerInRange(seconds, 0, 999)
@@ -149,6 +156,8 @@ function validateHistoryRecord(record) {
     result: 'win',
     level: record.level,
     ...settings,
+    noGuess,
+    noFlag,
     seconds,
     time: record.time,
     timestamp,

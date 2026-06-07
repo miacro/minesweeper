@@ -3,7 +3,9 @@ export const STORAGE_KEYS = {
   history: 'minesweeperHistory',
   language: 'minesweeperLanguageV2',
   noGuess: 'minesweeperNoGuess',
+  noFlag: 'minesweeperNoFlag',
   sound: 'minesweeperSound',
+  volume: 'minesweeperVolume',
   touchMode: 'minesweeperTouchMode',
   zoom: 'minesweeperZoom',
 };

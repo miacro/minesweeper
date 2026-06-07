@@ -43,6 +43,23 @@ test('valid snapshots are normalized without trusting derived counters', () => {
   assert.equal(normalized.elapsedMs, 4321);
   assert.equal(normalized.cells.length, 81);
   assert.equal(normalized.lastMineLayout.length, 10);
+  assert.equal(normalized.noGuess, false);
+  assert.equal(normalized.noFlag, false);
+});
+
+test('no-flag snapshots preserve the mode and reject marks', () => {
+  const snapshot = createSnapshot();
+  snapshot.noFlag = true;
+  assert.equal(validateGameSnapshot(snapshot).noFlag, true);
+
+  snapshot.cells[1].flagged = true;
+  assert.throws(() => validateGameSnapshot(snapshot), /No-flag games cannot contain marks/);
+});
+
+test('no-guess snapshots preserve the mode', () => {
+  const snapshot = createSnapshot();
+  snapshot.noGuess = true;
+  assert.equal(validateGameSnapshot(snapshot).noGuess, true);
 });
 
 test('legacy snapshots restore second-based timing', () => {
@@ -90,7 +107,11 @@ test('history validation rejects invalid records instead of silently importing t
     timestamp: 1_780_822_800_000,
   };
 
-  assert.equal(validateHistoryPayload([validRecord]).length, 1);
+  const [legacyRecord] = validateHistoryPayload([validRecord]);
+  assert.equal(legacyRecord.noGuess, false);
+  assert.equal(legacyRecord.noFlag, false);
+  assert.equal(validateHistoryPayload([{ ...validRecord, noGuess: true }])[0].noGuess, true);
+  assert.equal(validateHistoryPayload([{ ...validRecord, noFlag: true }])[0].noFlag, true);
   assert.throws(
     () => validateHistoryPayload([{ ...validRecord, seconds: -1 }]),
     /Invalid history time/,

@@ -61,6 +61,20 @@ export function revealCells(cells, settings, startRow, startCol) {
   return { cells: next, revealed, exploded };
 }
 
+export function revealCellsAt(cells, settings, coordinates) {
+  let next = cells;
+  let revealed = 0;
+
+  for (const [row, col] of coordinates) {
+    const result = revealCells(next, settings, row, col);
+    next = result.cells;
+    revealed += result.revealed;
+    if (result.exploded) return { cells: next, revealed, exploded: true };
+  }
+
+  return { cells: next, revealed, exploded: false };
+}
+
 export function revealAllMines(cells) {
   const next = cloneCells(cells);
   next.flat().forEach((cell) => {

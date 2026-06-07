@@ -170,6 +170,19 @@ p {
   height: 1.5rem;
 }
 
+.volume-control input[type="range"] {
+  width: 110px;
+  height: 1rem;
+  accent-color: #52735d;
+}
+
+.volume-control output {
+  min-width: 3.2em;
+  color: #526057;
+  font-variant-numeric: tabular-nums;
+  text-align: right;
+}
+
 .visually-hidden {
   position: absolute;
   width: 1px;
@@ -294,6 +307,13 @@ p {
   border: 4px solid var(--panel-dark);
   border-right-color: var(--panel-light);
   border-bottom-color: var(--panel-light);
+  cursor: pointer;
+  user-select: none;
+}
+
+.statusbar:focus-visible {
+  outline: 2px solid #1b5dab;
+  outline-offset: 2px;
 }
 
 .statusbar .counter:first-child {
@@ -320,32 +340,26 @@ p {
   font-size: 24px;
   line-height: 1;
   padding: 0;
-  cursor: pointer;
   user-select: none;
-  animation: face-reset 220ms ease-out;
+  animation: face-reset 110ms ease-out;
 }
 
-.face:active {
+.statusbar:active .face {
   border: 3px solid #808080;
   border-left-color: #808080;
   border-top-color: #808080;
   padding-top: 1px;
   padding-left: 1px;
-  transform: translate(1px, 1px) scale(0.94);
-}
-
-.face:focus-visible {
-  outline: 2px solid #1b5dab;
-  outline-offset: 2px;
+  transform: translate(1px, 1px) scale(0.98);
 }
 
 @keyframes face-reset {
   0% {
-    transform: scale(0.88);
+    transform: scale(0.96);
   }
 
-  55% {
-    transform: scale(1.08);
+  60% {
+    transform: scale(1.02);
   }
 
   100% {
@@ -1057,13 +1071,13 @@ body.has-horizontal-scroll-dock .page-shell {
   font-weight: 600;
 }
 
-#bestTime,
-#statusText {
+.meta-panel > span {
   display: inline-flex;
   align-items: center;
   min-height: 26px;
   padding: 0 8px;
   border-radius: 4px;
+  background: var(--surface-muted);
 }
 
 #statusText {
@@ -1104,6 +1118,46 @@ body.has-horizontal-scroll-dock .page-shell {
   padding: 14px;
   justify-content: flex-start;
   font-size: 12px;
+}
+
+.records-toolbar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  flex-wrap: wrap;
+  gap: 8px 12px;
+  padding-bottom: 12px;
+  border-bottom: 1px solid var(--line);
+}
+
+.records-filters,
+.records-actions {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 7px;
+}
+
+.records-toolbar select,
+.records-toolbar button {
+  height: 30px;
+  border: 1px solid #c7d0ca;
+  border-radius: 5px;
+  padding: 0 9px;
+  color: #354139;
+  background: var(--surface-muted);
+  font-size: 11px;
+  font-weight: 650;
+  cursor: pointer;
+}
+
+.records-toolbar select {
+  background: var(--surface);
+}
+
+.records-toolbar button:hover {
+  border-color: #9bac9f;
+  background: #e9eeea;
 }
 
 .history-panel {
@@ -1319,6 +1373,17 @@ body.has-horizontal-scroll-dock .page-shell {
 
   .meta-panel {
     flex-wrap: wrap;
+  }
+
+  .records-toolbar,
+  .records-filters,
+  .records-actions {
+    align-items: stretch;
+    width: 100%;
+  }
+
+  .records-filters select {
+    flex: 1 1 140px;
   }
 
   #statusText {

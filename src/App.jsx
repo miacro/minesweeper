@@ -2,6 +2,7 @@ import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 
 import { createI18n } from '../modules/i18n.js';
 import {
+  MAX_HISTORY_RECORDS,
   readJsonFile,
   validateHistoryPayload,
 } from '../modules/validation.js';
@@ -27,6 +28,18 @@ const SEGMENTS = {
   '-': ['g'],
 };
 
+const ZOOM_LEVELS = [50, 75, 100, 125, 150, 175, 200, 225, 250, 275, 300];
+
+function readLanguage() {
+  const stored = readText(STORAGE_KEYS.language, 'en');
+  return ['en', 'zh-CN'].includes(stored) ? stored : 'en';
+}
+
+function readZoom() {
+  const stored = Number(readText(STORAGE_KEYS.zoom, 100));
+  return ZOOM_LEVELS.includes(stored) ? stored : 100;
+}
+
 function downloadJson(filename, data) {
   const blob = new Blob([JSON.stringify(data, null, 2)], { type: 'application/json' });
   const url = URL.createObjectURL(blob);
@@ -38,8 +51,10 @@ function downloadJson(filename, data) {
 }
 
 function Counter({ value, label }) {
-  const sign = value < 0 ? '-' : '';
-  const digits = `${sign}${String(Math.abs(value)).padStart(3, '0').slice(-3)}`;
+  const clamped = Math.min(Math.max(Math.trunc(value), -99), 999);
+  const digits = clamped < 0
+    ? `-${String(Math.abs(clamped)).padStart(2, '0')}`
+    : String(clamped).padStart(3, '0');
   return (
     <div className="counter" aria-label={label}>
       <span className="digit-row">
@@ -61,18 +76,25 @@ function Counter({ value, label }) {
   );
 }
 
-function Cell({ cell, t, onOpen, onFlag, onChord, touchMode, warmAudio }) {
+function Cell({ cell, t, onOpen, onFlag, onChord, touchMode, noFlag, warmAudio }) {
   const longPressRef = useRef(null);
   const longPressedRef = useRef(false);
   const mousePointerRef = useRef(null);
   const skipClickRef = useRef(false);
+  const skipClickTimerRef = useRef(null);
 
-  const suppressClick = () => {
+  const suppressNextClick = () => {
+    window.clearTimeout(skipClickTimerRef.current);
     skipClickRef.current = true;
-    window.setTimeout(() => {
+    skipClickTimerRef.current = window.setTimeout(() => {
       skipClickRef.current = false;
-    }, 0);
+    }, 500);
   };
+
+  useEffect(() => () => {
+    window.clearTimeout(longPressRef.current);
+    window.clearTimeout(skipClickTimerRef.current);
+  }, []);
 
   const handlePointerDown = (event) => {
     warmAudio();
@@ -82,10 +104,11 @@ function Cell({ cell, t, onOpen, onFlag, onChord, touchMode, warmAudio }) {
       event.currentTarget.setPointerCapture(event.pointerId);
       return;
     }
+    if (noFlag) return;
     longPressedRef.current = false;
     longPressRef.current = window.setTimeout(() => {
       longPressedRef.current = true;
-      suppressClick();
+      suppressNextClick();
       if (touchMode === 'flag') onOpen(cell.row, cell.col);
       else onFlag(cell.row, cell.col);
     }, 480);
@@ -95,14 +118,14 @@ function Cell({ cell, t, onOpen, onFlag, onChord, touchMode, warmAudio }) {
     window.clearTimeout(longPressRef.current);
     if (event.pointerType === 'mouse' && event.pointerId === mousePointerRef.current) {
       mousePointerRef.current = null;
-      suppressClick();
+      suppressNextClick();
       const target = document.elementFromPoint(event.clientX, event.clientY)?.closest('.cell');
       if (target) onOpen(Number(target.dataset.row), Number(target.dataset.col));
       return;
     }
-    if (event.pointerType !== 'mouse' && touchMode === 'flag' && !longPressedRef.current) {
+    if (!noFlag && event.pointerType !== 'mouse' && touchMode === 'flag' && !longPressedRef.current) {
       event.preventDefault();
-      suppressClick();
+      suppressNextClick();
       onFlag(cell.row, cell.col);
     }
   };
@@ -126,17 +149,24 @@ function Cell({ cell, t, onOpen, onFlag, onChord, touchMode, warmAudio }) {
       data-col={cell.col}
       aria-label={t('cell', { row: cell.row + 1, col: cell.col + 1 })}
       onClick={() => {
-        if (!skipClickRef.current) onOpen(cell.row, cell.col);
+        if (skipClickRef.current) {
+          window.clearTimeout(skipClickTimerRef.current);
+          skipClickRef.current = false;
+          return;
+        }
+        onOpen(cell.row, cell.col);
       }}
       onDoubleClick={() => onChord(cell.row, cell.col)}
       onContextMenu={(event) => {
         event.preventDefault();
-        onFlag(cell.row, cell.col);
+        if (!noFlag) onFlag(cell.row, cell.col);
       }}
       onPointerDown={handlePointerDown}
       onPointerUp={handlePointerUp}
       onPointerCancel={() => {
         mousePointerRef.current = null;
+        window.clearTimeout(skipClickTimerRef.current);
+        skipClickRef.current = false;
         window.clearTimeout(longPressRef.current);
       }}
     >
@@ -167,6 +197,7 @@ function Board({ game, t, openCell, toggleFlag, chord, touchMode, warmAudio }) {
           onFlag={toggleFlag}
           onChord={chord}
           touchMode={touchMode}
+          noFlag={game.noFlag}
           warmAudio={warmAudio}
         />
       ))}
@@ -185,24 +216,68 @@ function RecordsPanel({
   translateError,
 }) {
   const [filter, setFilter] = useState('all');
+  const [noGuessFilter, setNoGuessFilter] = useState('all');
+  const [noFlagFilter, setNoFlagFilter] = useState('all');
   const [sort, setSort] = useState('timeDesc');
   const importRef = useRef(null);
+  const matchesOptions = useCallback((record) => {
+    const matchesNoGuess = noGuessFilter === 'all'
+      || record.noGuess === (noGuessFilter === 'enabled');
+    const matchesNoFlag = noFlagFilter === 'all'
+      || record.noFlag === (noFlagFilter === 'enabled');
+    return matchesNoGuess && matchesNoFlag;
+  }, [noFlagFilter, noGuessFilter]);
+  const filteredBestList = useMemo(
+    () => bestList.filter(matchesOptions),
+    [bestList, matchesOptions],
+  );
   const records = useMemo(() => history
     .filter((record) => filter === 'all' || record.level === filter)
+    .filter(matchesOptions)
     .sort((a, b) => {
       if (sort === 'secondsAsc') return a.seconds - b.seconds;
       if (sort === 'secondsDesc') return b.seconds - a.seconds;
       return sort === 'timeAsc' ? a.timestamp - b.timestamp : b.timestamp - a.timestamp;
-    }), [filter, history, sort]);
+    }), [filter, history, matchesOptions, sort]);
 
   if (!visible) return null;
   return (
     <section className="history-panel records-panel" aria-label={t('records')}>
+      <div className="records-toolbar">
+        <div className="records-filters">
+          <select value={noGuessFilter} onChange={(event) => setNoGuessFilter(event.target.value)} aria-label={t('noGuessFilter')}>
+            <option value="all">{t('noGuess')} · {t('all')}</option>
+            <option value="enabled">{t('noGuess')} · {t('enabled')}</option>
+            <option value="disabled">{t('noGuess')} · {t('disabled')}</option>
+          </select>
+          <select value={noFlagFilter} onChange={(event) => setNoFlagFilter(event.target.value)} aria-label={t('noFlagFilter')}>
+            <option value="all">{t('noFlag')} · {t('all')}</option>
+            <option value="enabled">{t('noFlag')} · {t('enabled')}</option>
+            <option value="disabled">{t('noFlag')} · {t('disabled')}</option>
+          </select>
+        </div>
+        <div className="records-actions">
+          <button type="button" onClick={() => downloadJson(`minesweeper-history-${new Date().toISOString().slice(0, 10)}.json`, {
+            app: 'minesweeper',
+            version: 2,
+            exportedAt: new Date().toISOString(),
+            records: history,
+          })}>{t('saveFile')}</button>
+          <button type="button" onClick={() => importRef.current?.click()}>{t('loadFile')}</button>
+          <button type="button" onClick={clearHistory}>{t('clear')}</button>
+        </div>
+      </div>
       <div className="records-section">
         <strong>{t('bestScores')}</strong>
         <ol className="history-list" data-empty-label={t('empty')}>
-          {bestList.map((entry) => (
-            <li key={entry.board}>{entry.board} · {entry.seconds}s</li>
+          {filteredBestList.map((entry) => (
+            <li key={`${entry.board}-${entry.noGuess}-${entry.noFlag}`}>
+              {entry.board}
+              {entry.noGuess ? ` · ${t('noGuess')}` : ''}
+              {entry.noFlag ? ` · ${t('noFlag')}` : ''}
+              {!entry.noGuess && !entry.noFlag ? ` · ${t('standardMode')}` : ''}
+              {' · '}{entry.seconds}s
+            </li>
           ))}
         </ol>
       </div>
@@ -221,13 +296,6 @@ function RecordsPanel({
             <option value="secondsAsc">{t('fastest')}</option>
             <option value="secondsDesc">{t('slowest')}</option>
           </select>
-          <button type="button" onClick={() => downloadJson(`minesweeper-history-${new Date().toISOString().slice(0, 10)}.json`, {
-            app: 'minesweeper',
-            version: 2,
-            exportedAt: new Date().toISOString(),
-            records: history,
-          })}>{t('saveFile')}</button>
-          <button type="button" onClick={() => importRef.current?.click()}>{t('loadFile')}</button>
           <input
             ref={importRef}
             type="file"
@@ -239,9 +307,9 @@ function RecordsPanel({
                 const imported = validateHistoryPayload(await readJsonFile(file));
                 const merged = [...imported, ...history];
                 const unique = [...new Map(merged.map((record) => [
-                  `${record.level}|${record.rows}|${record.cols}|${record.mines}|${record.seconds}|${record.timestamp}`,
+                  `${record.level}|${record.rows}|${record.cols}|${record.mines}|${record.noGuess}|${record.noFlag}|${record.seconds}|${record.timestamp}`,
                   record,
-                ])).values()];
+                ])).values()].slice(0, MAX_HISTORY_RECORDS);
                 setHistory(unique);
                 writeJson(STORAGE_KEYS.history, unique);
               } catch (error) {
@@ -250,12 +318,15 @@ function RecordsPanel({
               event.target.value = '';
             }}
           />
-          <button type="button" onClick={clearHistory}>{t('clear')}</button>
         </div>
         <ol className="history-list" data-empty-label={t('empty')}>
           {records.map((record) => (
-            <li key={`${record.level}-${record.timestamp}`}>
-              {t('win')} · {t(record.level)} {record.rows}x{record.cols}/{record.mines} {t('mineUnit')} · {record.seconds}s · {new Date(record.timestamp).toLocaleString(language, { hour12: false })}
+            <li key={`${record.level}-${record.noGuess}-${record.noFlag}-${record.timestamp}`}>
+              {t('win')}
+              {record.noGuess ? ` · ${t('noGuess')}` : ''}
+              {record.noFlag ? ` · ${t('noFlag')}` : ''}
+              {!record.noGuess && !record.noFlag ? ` · ${t('standardMode')}` : ''}
+              {' · '}{t(record.level)} {record.rows}x{record.cols}/{record.mines} {t('mineUnit')} · {record.seconds}s · {new Date(record.timestamp).toLocaleString(language, { hour12: false })}
             </li>
           ))}
         </ol>
@@ -265,13 +336,13 @@ function RecordsPanel({
 }
 
 function App() {
-  const [language, setLanguage] = useState(() => readText(STORAGE_KEYS.language, 'en'));
+  const [language, setLanguage] = useState(readLanguage);
   const i18n = useMemo(() => createI18n(language), [language]);
   const t = useCallback((key, values) => i18n.t(key, values), [i18n]);
   const gameApi = useMinesweeper({ t });
   const {
     game, seconds, flags, bestTime, bestList, history,
-    noGuess, sound, touchMode, soundPlayer,
+    noGuess, noFlag, sound, volume, touchMode, soundPlayer,
     newGame, retrySame, openCell, toggleFlag, chord, setPaused,
     serialize, restore, clearHistory, setHistory, settingsActions,
   } = gameApi;
@@ -279,7 +350,7 @@ function App() {
   const [helpVisible, setHelpVisible] = useState(false);
   const [recordsVisible, setRecordsVisible] = useState(false);
   const [faceAnimation, setFaceAnimation] = useState(0);
-  const [zoom, setZoom] = useState(() => Number(readText(STORAGE_KEYS.zoom, 100)));
+  const [zoom, setZoom] = useState(readZoom);
   const [custom, setCustom] = useState({ rows: 16, cols: 16, mines: 40 });
   const shellRef = useRef(null);
   const cardRef = useRef(null);
@@ -360,6 +431,7 @@ function App() {
     ['helpChordTitle', 'helpChord'],
     ['helpTouchTitle', 'helpTouch'],
     ['helpSafetyTitle', 'helpSafety'],
+    ['helpNoFlagTitle', 'helpNoFlag'],
     ['helpKeysTitle', 'helpKeys'],
   ];
 
@@ -411,13 +483,36 @@ function App() {
                   setZoom(value);
                   writeText(STORAGE_KEYS.zoom, value);
                 }}>
-                  {[50, 75, 100, 125, 150, 175, 200, 225, 250, 275, 300].map((value) => <option value={value} key={value}>{value}%</option>)}
+                  {ZOOM_LEVELS.map((value) => <option value={value} key={value}>{value}%</option>)}
                 </select>
               </label>
               <label className="option-control"><input type="checkbox" checked={noGuess} onChange={(event) => settingsActions.setNoGuess(event.target.checked)} />{t('noGuess')}</label>
+              <label className="option-control"><input type="checkbox" checked={noFlag} onChange={(event) => settingsActions.setNoFlag(event.target.checked)} />{t('noFlag')}</label>
               <label className="option-control"><input type="checkbox" checked={sound} onChange={(event) => settingsActions.setSound(event.target.checked)} />{t('sound')}</label>
+              <label className="option-control volume-control">
+                <span>{t('volume')}</span>
+                <input
+                  type="range"
+                  min="0"
+                  max="100"
+                  step="5"
+                  value={volume}
+                  aria-label={t('volume')}
+                  aria-valuetext={`${volume}%`}
+                  onChange={(event) => settingsActions.setVolume(event.target.value)}
+                  onPointerUp={() => {
+                    if (sound) void soundPlayer.play('flag');
+                  }}
+                  onKeyUp={(event) => {
+                    if (sound && ['ArrowLeft', 'ArrowRight', 'Home', 'End', 'PageUp', 'PageDown'].includes(event.key)) {
+                      void soundPlayer.play('flag');
+                    }
+                  }}
+                />
+                <output>{volume}%</output>
+              </label>
               <label className="option-control">{t('touch')}
-                <select value={touchMode} onChange={(event) => settingsActions.setTouchMode(event.target.value)}>
+                <select disabled={noFlag} value={noFlag ? 'open' : touchMode} onChange={(event) => settingsActions.setTouchMode(event.target.value)}>
                   <option value="open">{t('touchOpen')}</option>
                   <option value="flag">{t('touchFlag')}</option>
                 </select>
@@ -466,6 +561,9 @@ function App() {
 
           <div className="meta-panel">
             <span>{t('best', { value: bestTime === null ? '--' : `${bestTime}s` })}</span>
+            {noGuess && <span>{t('noGuess')}</span>}
+            {noFlag && <span>{t('noFlag')}</span>}
+            {!noGuess && !noFlag && <span>{t('standardMode')}</span>}
             <span id="statusText">{t(game.status)}</span>
             <button type="button" onClick={() => setPaused(!game.paused)}>{t(game.paused ? 'resume' : 'pause')}</button>
             <button type="button" onClick={retrySame}>{t('retry')}</button>
@@ -473,17 +571,27 @@ function App() {
 
           <div className="play-layout">
             <div className="game-frame">
-              <div className="statusbar" style={{ width: `${statusWidth}px` }}>
+              <div
+                className="statusbar"
+                style={{ width: `${statusWidth}px` }}
+                role="button"
+                tabIndex={0}
+                aria-label={t('restart')}
+                onClick={resetGame}
+                onKeyDown={(event) => {
+                  if (event.key !== 'Enter' && event.key !== ' ') return;
+                  event.preventDefault();
+                  resetGame();
+                }}
+              >
                 <Counter value={game.settings.mines - flags} label={t('minesRemaining')} />
-                <button
+                <span
                   className="face"
                   key={faceAnimation}
-                  type="button"
-                  aria-label={t('restart')}
-                  onClick={resetGame}
+                  aria-hidden="true"
                 >
-                  <span aria-hidden="true">{game.status === 'win' ? '😎' : game.status === 'lose' ? '😵' : '🙂'}</span>
-                </button>
+                  {game.status === 'win' ? '😎' : game.status === 'lose' ? '😵' : '🙂'}
+                </span>
                 <Counter value={seconds} label={t('elapsed')} />
               </div>
               <Board game={game} t={t} openCell={openCell} toggleFlag={toggleFlag} chord={chord} touchMode={touchMode} warmAudio={() => soundPlayer.warm()} />

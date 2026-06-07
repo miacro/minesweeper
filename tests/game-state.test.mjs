@@ -7,6 +7,7 @@ import {
   countRevealedSafe,
   createCells,
   revealCells,
+  revealCellsAt,
 } from '../src/game-state.js';
 
 test('mine layouts calculate adjacent counts without mutating the source board', () => {
@@ -41,4 +42,18 @@ test('flag counting reflects cell markers', () => {
   board[0][0].flagged = true;
   board[2][3].flagged = true;
   assert.equal(countFlags(board), 2);
+});
+
+test('revealing multiple cells stops after the first explosion', () => {
+  const settings = { rows: 8, cols: 8, mines: 10 };
+  const layout = [
+    [0, 0], [0, 1], [0, 2], [0, 3], [0, 4],
+    [1, 0], [1, 1], [1, 2], [1, 3], [1, 4],
+  ];
+  const board = applyMineLayout(createCells(settings), settings, layout);
+  const result = revealCellsAt(board, settings, [[0, 0], [7, 7]]);
+
+  assert.equal(result.exploded, true);
+  assert.equal(result.cells[0][0].exploded, true);
+  assert.equal(result.cells[7][7].revealed, false);
 });
