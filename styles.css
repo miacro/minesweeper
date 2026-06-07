@@ -294,7 +294,6 @@ p {
   border: 4px solid var(--panel-dark);
   border-right-color: var(--panel-light);
   border-bottom-color: var(--panel-light);
-  cursor: pointer;
 }
 
 .statusbar .counter:first-child {
@@ -320,16 +319,44 @@ p {
   background: var(--panel);
   font-size: 24px;
   line-height: 1;
-  pointer-events: none;
+  padding: 0;
+  cursor: pointer;
   user-select: none;
+  animation: face-reset 220ms ease-out;
 }
 
-.statusbar.is-pressing .face {
+.face:active {
   border: 3px solid #808080;
   border-left-color: #808080;
   border-top-color: #808080;
   padding-top: 1px;
   padding-left: 1px;
+  transform: translate(1px, 1px) scale(0.94);
+}
+
+.face:focus-visible {
+  outline: 2px solid #1b5dab;
+  outline-offset: 2px;
+}
+
+@keyframes face-reset {
+  0% {
+    transform: scale(0.88);
+  }
+
+  55% {
+    transform: scale(1.08);
+  }
+
+  100% {
+    transform: scale(1);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .face {
+    animation: none;
+  }
 }
 
 .counter {

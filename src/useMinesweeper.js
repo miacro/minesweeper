@@ -57,7 +57,7 @@ export function useMinesweeper({ t }) {
   const [history, setHistory] = useState(readHistory);
   const [bestVersion, setBestVersion] = useState(0);
   const [noGuess, setNoGuess] = useState(() => readText(STORAGE_KEYS.noGuess) === '1');
-  const [sound, setSound] = useState(() => readText(STORAGE_KEYS.sound) === '1');
+  const [sound, setSound] = useState(() => readText(STORAGE_KEYS.sound, '1') !== '0');
   const [touchMode, setTouchMode] = useState(() => readText(STORAGE_KEYS.touchMode, 'open'));
   const gameRef = useRef(game);
   const soundRef = useRef(sound);
@@ -370,8 +370,10 @@ export function useMinesweeper({ t }) {
       writeText(STORAGE_KEYS.noGuess, value ? '1' : '0');
     },
     setSound(value) {
+      soundRef.current = value;
       setSound(value);
       writeText(STORAGE_KEYS.sound, value ? '1' : '0');
+      if (value) void soundPlayerRef.current.play('flag');
     },
     setTouchMode(value) {
       setTouchMode(value);

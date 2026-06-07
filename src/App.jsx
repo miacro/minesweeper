@@ -278,6 +278,7 @@ function App() {
   const [settingsVisible, setSettingsVisible] = useState(false);
   const [helpVisible, setHelpVisible] = useState(false);
   const [recordsVisible, setRecordsVisible] = useState(false);
+  const [faceAnimation, setFaceAnimation] = useState(0);
   const [zoom, setZoom] = useState(() => Number(readText(STORAGE_KEYS.zoom, 100)));
   const [custom, setCustom] = useState({ rows: 16, cols: 16, mines: 40 });
   const shellRef = useRef(null);
@@ -349,6 +350,11 @@ function App() {
   }, [game.level, game.paused, game.settings, newGame, setPaused]);
 
   const statusWidth = game.settings.cols * 24 + 8;
+  const resetGame = () => {
+    soundPlayer.warm();
+    setFaceAnimation((value) => value + 1);
+    newGame(game.settings, game.level);
+  };
   const helpItems = [
     ['helpMouseTitle', 'helpMouse'],
     ['helpChordTitle', 'helpChord'],
@@ -467,14 +473,17 @@ function App() {
 
           <div className="play-layout">
             <div className="game-frame">
-              <div className="statusbar" style={{ width: `${statusWidth}px` }} onPointerDown={(event) => {
-                if (event.target === event.currentTarget || event.target.closest('.face')) {
-                  soundPlayer.warm();
-                  newGame(game.settings, game.level);
-                }
-              }}>
+              <div className="statusbar" style={{ width: `${statusWidth}px` }}>
                 <Counter value={game.settings.mines - flags} label={t('minesRemaining')} />
-                <div className="face" aria-hidden="true">{game.status === 'win' ? '😎' : game.status === 'lose' ? '😵' : '🙂'}</div>
+                <button
+                  className="face"
+                  key={faceAnimation}
+                  type="button"
+                  aria-label={t('restart')}
+                  onClick={resetGame}
+                >
+                  <span aria-hidden="true">{game.status === 'win' ? '😎' : game.status === 'lose' ? '😵' : '🙂'}</span>
+                </button>
                 <Counter value={seconds} label={t('elapsed')} />
               </div>
               <Board game={game} t={t} openCell={openCell} toggleFlag={toggleFlag} chord={chord} touchMode={touchMode} warmAudio={() => soundPlayer.warm()} />
