@@ -39,6 +39,14 @@ export function createGameTimer({
     intervalId = null;
   }
 
+  function stop() {
+    if (startedAt !== null) {
+      accumulatedMs = elapsedMilliseconds();
+      startedAt = null;
+    }
+    clearTicker();
+  }
+
   return {
     start() {
       if (startedAt !== null) return;
@@ -48,13 +56,11 @@ export function createGameTimer({
     },
 
     pause() {
-      if (startedAt !== null) {
-        accumulatedMs = elapsedMilliseconds();
-        startedAt = null;
-      }
-      clearTicker();
+      stop();
       sync({ force: true, persist: false });
     },
+
+    stop,
 
     reset() {
       startedAt = null;

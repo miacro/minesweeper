@@ -3,6 +3,7 @@ import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { createI18n } from '../modules/i18n.js';
 import {
   MAX_HISTORY_RECORDS,
+  normalizeBoardSettings,
   readJsonFile,
   validateHistoryPayload,
 } from '../modules/validation.js';
@@ -13,6 +14,11 @@ import {
   writeText,
 } from '../modules/storage.js';
 import { findChordCandidates } from './game-state.js';
+import {
+  canCompleteMouseGesture,
+  isPrimaryMouseGesture,
+  movedBeyondThreshold,
+} from './input-logic.js';
 import { LEVELS, useMinesweeper } from './useMinesweeper.js';
 
 const SEGMENTS = {
@@ -80,6 +86,8 @@ function Counter({ value, label }) {
 function Cell({ cell, t, onOpen, onFlag, touchMode, noFlag, warmAudio }) {
   const longPressRef = useRef(null);
   const longPressedRef = useRef(false);
+  const touchStartRef = useRef(null);
+  const touchMovedRef = useRef(false);
   const skipClickRef = useRef(false);
   const skipClickTimerRef = useRef(null);
 
@@ -88,7 +96,7 @@ function Cell({ cell, t, onOpen, onFlag, touchMode, noFlag, warmAudio }) {
     skipClickRef.current = true;
     skipClickTimerRef.current = window.setTimeout(() => {
       skipClickRef.current = false;
-    }, 500);
+    }, 0);
   };
 
   useEffect(() => () => {
@@ -97,11 +105,21 @@ function Cell({ cell, t, onOpen, onFlag, touchMode, noFlag, warmAudio }) {
   }, []);
 
   const handlePointerDown = (event) => {
-    if (event.pointerType === 'mouse') return;
+    if (event.pointerType === 'mouse') {
+      longPressedRef.current = false;
+      return;
+    }
+    if (event.button !== 0) return;
     warmAudio();
+    touchStartRef.current = {
+      pointerId: event.pointerId,
+      clientX: event.clientX,
+      clientY: event.clientY,
+    };
+    touchMovedRef.current = false;
+    longPressedRef.current = false;
     event.currentTarget.classList.add('peek');
     if (noFlag) return;
-    longPressedRef.current = false;
     longPressRef.current = window.setTimeout(() => {
       longPressedRef.current = true;
       suppressNextClick();
@@ -110,9 +128,25 @@ function Cell({ cell, t, onOpen, onFlag, touchMode, noFlag, warmAudio }) {
     }, 480);
   };
 
-  const handlePointerUp = (event) => {
+  const handlePointerMove = (event) => {
+    if (event.pointerType === 'mouse' || touchMovedRef.current) return;
+    if (!movedBeyondThreshold(touchStartRef.current, event)) return;
+    touchMovedRef.current = true;
     event.currentTarget.classList.remove('peek');
     window.clearTimeout(longPressRef.current);
+  };
+
+  const handlePointerUp = (event) => {
+    const moved = touchMovedRef.current;
+    touchStartRef.current = null;
+    touchMovedRef.current = false;
+    event.currentTarget.classList.remove('peek');
+    window.clearTimeout(longPressRef.current);
+    if (event.pointerType !== 'mouse' && moved) {
+      event.preventDefault();
+      suppressNextClick();
+      return;
+    }
     if (!noFlag && event.pointerType !== 'mouse' && touchMode === 'flag' && !longPressedRef.current) {
       event.preventDefault();
       suppressNextClick();
@@ -148,11 +182,15 @@ function Cell({ cell, t, onOpen, onFlag, touchMode, noFlag, warmAudio }) {
       }}
       onContextMenu={(event) => {
         event.preventDefault();
+        if (longPressedRef.current) return;
         if (!noFlag) onFlag(cell.row, cell.col);
       }}
       onPointerDown={handlePointerDown}
+      onPointerMove={handlePointerMove}
       onPointerUp={handlePointerUp}
       onPointerCancel={(event) => {
+        touchStartRef.current = null;
+        touchMovedRef.current = false;
         event.currentTarget.classList.remove('peek');
         window.clearTimeout(skipClickTimerRef.current);
         skipClickRef.current = false;
@@ -211,7 +249,7 @@ function Board({ game, t, openCell, toggleFlag, touchMode, warmAudio }) {
     skipMouseClickRef.current = true;
     skipMouseClickTimerRef.current = window.setTimeout(() => {
       skipMouseClickRef.current = false;
-    }, 500);
+    }, 0);
   };
 
   useEffect(() => () => {
@@ -220,7 +258,7 @@ function Board({ game, t, openCell, toggleFlag, touchMode, warmAudio }) {
   }, []);
 
   const handlePointerDown = (event) => {
-    if (event.pointerType !== 'mouse' || event.button !== 0) return;
+    if (!isPrimaryMouseGesture(event)) return;
     const target = cellAtPoint(event.clientX, event.clientY);
     if (!target) return;
     warmAudio();
@@ -230,7 +268,7 @@ function Board({ game, t, openCell, toggleFlag, touchMode, warmAudio }) {
   };
 
   const handlePointerMove = (event) => {
-    if (event.pointerType !== 'mouse' || mousePointerRef.current === null) return;
+    if (event.pointerType !== 'mouse' || mousePointerRef.current !== event.pointerId) return;
     if ((event.buttons & 1) === 0) {
       mousePointerRef.current = null;
       clearPreview();
@@ -241,6 +279,12 @@ function Board({ game, t, openCell, toggleFlag, touchMode, warmAudio }) {
 
   const handlePointerUp = (event) => {
     if (event.pointerType !== 'mouse' || event.button !== 0) return;
+    if (!canCompleteMouseGesture(mousePointerRef.current, event)) {
+      mousePointerRef.current = null;
+      clearPreview();
+      suppressMouseClick();
+      return;
+    }
     const target = cellAtPoint(event.clientX, event.clientY);
     mousePointerRef.current = null;
     clearPreview();
@@ -267,7 +311,7 @@ function Board({ game, t, openCell, toggleFlag, touchMode, warmAudio }) {
       aria-label={t('board')}
       style={{ gridTemplateColumns: `repeat(${game.settings.cols}, 24px)` }}
       onClickCapture={(event) => {
-        if (!skipMouseClickRef.current || event.detail === 0) return;
+        if (event.detail === 0 || (!event.ctrlKey && !skipMouseClickRef.current)) return;
         window.clearTimeout(skipMouseClickTimerRef.current);
         skipMouseClickRef.current = false;
         event.preventDefault();
@@ -519,6 +563,11 @@ function App() {
     setFaceAnimation((value) => value + 1);
     newGame(game.settings, game.level);
   };
+  const startCustomGame = () => {
+    const settings = normalizeBoardSettings(custom);
+    setCustom(settings);
+    newGame(settings, 'custom');
+  };
   const helpItems = [
     ['helpMouseTitle', 'helpMouse'],
     ['helpChordTitle', 'helpChord'],
@@ -560,7 +609,7 @@ function App() {
                   type="button"
                   key={level}
                   onClick={() => {
-                    if (level === 'custom') newGame(custom, 'custom');
+                    if (level === 'custom') startCustomGame();
                     else newGame(LEVELS[level], level);
                   }}
                 >{t(level)}</button>
@@ -634,12 +683,7 @@ function App() {
           {game.level === 'custom' && (
             <form className="custom-panel" onSubmit={(event) => {
               event.preventDefault();
-              const rows = Math.min(Math.max(custom.rows, 8), 30);
-              const cols = Math.min(Math.max(custom.cols, 8), 40);
-              const mines = Math.min(Math.max(custom.mines, 10), rows * cols - 9);
-              const settings = { rows, cols, mines };
-              setCustom(settings);
-              newGame(settings, 'custom');
+              startCustomGame();
             }}>
               {[
                 ['cols', 'width', 8, 40],

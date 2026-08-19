@@ -2,6 +2,7 @@ import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 
 import { createSoundPlayer } from '../modules/audio.js';
 import { generateMineLayoutAsync } from '../modules/game-logic.js';
+import { createGameTimer } from '../modules/timer.js';
 import {
   readJson,
   readText,
@@ -14,6 +15,7 @@ import {
 import {
   BOARD_LIMITS,
   MAX_HISTORY_RECORDS,
+  normalizeBoardSettings,
   validateGameSnapshot,
   validateHistoryPayload,
 } from '../modules/validation.js';
@@ -91,9 +93,10 @@ export function useMinesweeper({ t }) {
   const gameRef = useRef(game);
   const soundRef = useRef(sound);
   const volumeRef = useRef(volume);
-  const startedAtRef = useRef(null);
   const generationRef = useRef(0);
   const soundPlayerRef = useRef(null);
+  const saveCurrentGameRef = useRef(() => {});
+  const timerRef = useRef(null);
 
   gameRef.current = game;
   soundRef.current = sound;
@@ -104,11 +107,14 @@ export function useMinesweeper({ t }) {
       () => volumeRef.current / 100,
     );
   }
+  if (!timerRef.current) {
+    timerRef.current = createGameTimer({
+      onTick: setSeconds,
+      onPersist: () => saveCurrentGameRef.current(),
+    });
+  }
 
-  const elapsedMs = useCallback(() => {
-    const running = startedAtRef.current === null ? 0 : Date.now() - startedAtRef.current;
-    return Math.min(gameRef.current.elapsedMs + Math.max(0, running), 999_999);
-  }, []);
+  const elapsedMs = useCallback(() => timerRef.current.getElapsedMilliseconds(), []);
 
   const serialize = useCallback(() => {
     const current = gameRef.current;
@@ -135,18 +141,14 @@ export function useMinesweeper({ t }) {
     const snapshot = serialize();
     if (snapshot) writeJson(STORAGE_KEYS.currentGame, snapshot);
   }, [serialize]);
+  saveCurrentGameRef.current = saveCurrentGame;
 
   useEffect(() => {
-    if (game.firstClick || game.gameOver || game.paused) return undefined;
-    if (startedAtRef.current === null) startedAtRef.current = Date.now();
-    const tick = () => {
-      setSeconds(Math.min(Math.floor(elapsedMs() / 1000), 999));
-      saveCurrentGame();
-    };
-    tick();
-    const interval = window.setInterval(tick, 250);
-    return () => window.clearInterval(interval);
-  }, [elapsedMs, game.firstClick, game.gameOver, game.paused, saveCurrentGame]);
+    const timer = timerRef.current;
+    if (game.firstClick || game.gameOver || game.paused) timer.pause();
+    else timer.start();
+    return () => timer.stop();
+  }, [game.firstClick, game.gameOver, game.paused]);
 
   useEffect(() => {
     const save = () => saveCurrentGame();
@@ -217,9 +219,8 @@ export function useMinesweeper({ t }) {
     noFlag = gameRef.current.noFlag,
   ) => {
     generationRef.current += 1;
-    startedAtRef.current = null;
-    setSeconds(0);
-    const next = createInitialGame({ ...settings }, level, noGuess, noFlag);
+    timerRef.current.reset();
+    const next = createInitialGame(normalizeBoardSettings(settings), level, noGuess, noFlag);
     gameRef.current = next;
     setGame(next);
     removeStored(STORAGE_KEYS.currentGame);
@@ -228,7 +229,7 @@ export function useMinesweeper({ t }) {
   const finishLoss = useCallback((cells) => {
     const finalElapsedMs = elapsedMs();
     const finalSeconds = Math.min(Math.floor(finalElapsedMs / 1000), 999);
-    startedAtRef.current = null;
+    timerRef.current.pause();
     setSeconds(finalSeconds);
     removeStored(STORAGE_KEYS.currentGame);
     soundPlayerRef.current.play('lose');
@@ -277,7 +278,7 @@ export function useMinesweeper({ t }) {
       return nextHistory;
     });
     removeStored(STORAGE_KEYS.currentGame);
-    startedAtRef.current = null;
+    timerRef.current.pause();
     setSeconds(finalSeconds);
     soundPlayerRef.current.play('win');
     const next = {
@@ -323,7 +324,7 @@ export function useMinesweeper({ t }) {
         return;
       }
       cells = applyMineLayout(cells, current.settings, mineLayout);
-      startedAtRef.current = Date.now();
+      timerRef.current.start();
     }
 
     const result = revealCells(cells, current.settings, row, col);
@@ -398,7 +399,8 @@ export function useMinesweeper({ t }) {
     const current = gameRef.current;
     if (current.firstClick || current.gameOver) return;
     const accumulated = elapsedMs();
-    startedAtRef.current = paused ? null : Date.now();
+    if (paused) timerRef.current.pause();
+    else timerRef.current.start();
     const next = {
       ...current,
       paused,
@@ -413,8 +415,8 @@ export function useMinesweeper({ t }) {
     const current = gameRef.current;
     if (!current.mineLayout) return;
     generationRef.current += 1;
-    startedAtRef.current = Date.now();
-    setSeconds(0);
+    timerRef.current.reset();
+    timerRef.current.start();
     const cells = applyMineLayout(createCells(current.settings), current.settings, current.mineLayout);
     const next = {
       ...createInitialGame(
@@ -437,8 +439,8 @@ export function useMinesweeper({ t }) {
     const cells = applyMineLayout(createCells(snapshot.settings), snapshot.settings, snapshot.lastMineLayout);
     snapshot.cells.forEach((saved) => Object.assign(cells[saved.row][saved.col], saved));
     generationRef.current += 1;
-    startedAtRef.current = Date.now();
-    setSeconds(Math.floor(snapshot.elapsedMs / 1000));
+    timerRef.current.restore(snapshot.elapsedMs);
+    timerRef.current.start();
     const next = {
       settings: snapshot.settings,
       level: snapshot.currentLevel,

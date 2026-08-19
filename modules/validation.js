@@ -20,6 +20,20 @@ function isIntegerInRange(value, min, max) {
   return Number.isInteger(value) && value >= min && value <= max;
 }
 
+function clampInteger(value, min, max) {
+  const number = Number(value);
+  const integer = Number.isFinite(number) ? Math.trunc(number) : min;
+  return Math.min(Math.max(integer, min), max);
+}
+
+export function normalizeBoardSettings(value = {}) {
+  const input = value && typeof value === 'object' && !Array.isArray(value) ? value : {};
+  const rows = clampInteger(input.rows, BOARD_LIMITS.minRows, BOARD_LIMITS.maxRows);
+  const cols = clampInteger(input.cols, BOARD_LIMITS.minCols, BOARD_LIMITS.maxCols);
+  const mines = clampInteger(input.mines, BOARD_LIMITS.minMines, rows * cols - 9);
+  return { rows, cols, mines };
+}
+
 function validateSettings(value) {
   if (!value || typeof value !== 'object' || Array.isArray(value)) {
     throw new Error('Missing board settings');

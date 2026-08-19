@@ -2,9 +2,25 @@ import assert from 'node:assert/strict';
 import test from 'node:test';
 
 import {
+  normalizeBoardSettings,
   validateGameSnapshot,
   validateHistoryPayload,
 } from '../modules/validation.js';
+
+test('board settings are normalized before starting a custom game', () => {
+  assert.deepEqual(
+    normalizeBoardSettings({ rows: 0, cols: 100, mines: 300 }),
+    { rows: 8, cols: 40, mines: 300 },
+  );
+  assert.deepEqual(
+    normalizeBoardSettings({ rows: 8, cols: 8, mines: 300 }),
+    { rows: 8, cols: 8, mines: 55 },
+  );
+  assert.deepEqual(
+    normalizeBoardSettings({ rows: 9.9, cols: '9', mines: '10' }),
+    { rows: 9, cols: 9, mines: 10 },
+  );
+});
 
 function createSnapshot() {
   const settings = { rows: 9, cols: 9, mines: 10 };
