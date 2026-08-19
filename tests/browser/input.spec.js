@@ -37,6 +37,36 @@ test('primary mouse preview follows the pointer and opens the release cell', asy
   await expect(page.locator('.cell.peek')).toHaveCount(0);
 });
 
+test('same-cell movement does not cancel the pending click', async ({ page }) => {
+  const target = cell(page, 0, 0);
+  const point = await centerOf(target);
+  await page.evaluate(() => {
+    const board = document.querySelector('.board');
+    board.addEventListener('pointerdown', (event) => {
+      window.__activeTestPointerId = event.pointerId;
+    }, { once: true });
+  });
+
+  await page.mouse.move(point.x, point.y);
+  await page.mouse.down();
+  await expect(target).toHaveClass(/\bpeek\b/);
+
+  const pointerId = await page.evaluate(() => window.__activeTestPointerId);
+  await target.dispatchEvent('pointermove', {
+    pointerType: 'mouse',
+    pointerId,
+    button: -1,
+    buttons: 0,
+    clientX: point.x + 1,
+    clientY: point.y + 1,
+  });
+  await expect(target).toHaveClass(/\bpeek\b/);
+
+  await page.mouse.move(point.x + 2, point.y + 2);
+  await page.mouse.up();
+  await expect(target).toHaveClass(/\brevealed\b/);
+});
+
 test('Control-primary click never leaks into the reveal action', async ({ page }) => {
   const target = cell(page, 0, 0);
   const point = await centerOf(target);

@@ -276,11 +276,6 @@ function Board({ game, t, openCell, toggleFlag, touchMode, warmAudio }) {
 
   const handlePointerMove = (event) => {
     if (event.pointerType !== 'mouse' || mousePointerRef.current !== event.pointerId) return;
-    if ((event.buttons & 1) === 0) {
-      mousePointerRef.current = null;
-      clearPreview();
-      return;
-    }
     showPreview(cellAtPoint(event.clientX, event.clientY));
   };
 
