@@ -132,4 +132,8 @@ test('history validation rejects invalid records instead of silently importing t
     () => validateHistoryPayload([{ ...validRecord, seconds: -1 }]),
     /Invalid history time/,
   );
+  assert.throws(
+    () => validateHistoryPayload([{ ...validRecord, rows: 16, cols: 16, mines: 40 }]),
+    /do not match the selected difficulty/,
+  );
 });

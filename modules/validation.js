@@ -54,6 +54,17 @@ function validateBoolean(value) {
   return value;
 }
 
+function validateLevelSettings(level, settings) {
+  const standard = STANDARD_LEVELS[level];
+  if (standard && (
+    settings.rows !== standard.rows
+    || settings.cols !== standard.cols
+    || settings.mines !== standard.mines
+  )) {
+    throw new Error('Board settings do not match the selected difficulty');
+  }
+}
+
 export function validateGameSnapshot(input) {
   if (!input || typeof input !== 'object' || Array.isArray(input)) {
     throw new Error('Game state must be an object');
@@ -65,12 +76,7 @@ export function validateGameSnapshot(input) {
   const noFlag = input.noFlag === undefined ? false : validateBoolean(input.noFlag);
   const currentLevel = input.currentLevel === undefined ? 'custom' : input.currentLevel;
   if (!LEVEL_IDS.has(currentLevel)) throw new Error('Invalid difficulty');
-  const standard = STANDARD_LEVELS[currentLevel];
-  if (standard && (
-    rows !== standard.rows || cols !== standard.cols || mines !== standard.mines
-  )) {
-    throw new Error('Board settings do not match the selected difficulty');
-  }
+  validateLevelSettings(currentLevel, settings);
 
   if (!Array.isArray(input.lastMineLayout) || input.lastMineLayout.length !== mines) {
     throw new Error('Incorrect mine count');
@@ -153,6 +159,7 @@ function validateHistoryRecord(record) {
   }
 
   const settings = validateSettings(record);
+  validateLevelSettings(record.level, settings);
   const noGuess = record.noGuess === undefined ? false : validateBoolean(record.noGuess);
   const noFlag = record.noFlag === undefined ? false : validateBoolean(record.noFlag);
   const { seconds } = record;

@@ -5,6 +5,7 @@ import {
   canCompleteMouseGesture,
   isPrimaryMouseGesture,
   movedBeyondThreshold,
+  touchReleaseAction,
 } from '../src/input-logic.js';
 
 test('mouse gestures require the same primary pointer to start inside the board', () => {
@@ -33,4 +34,17 @@ test('touch movement is cancelled only after crossing the drag threshold', () =>
   assert.equal(movedBeyondThreshold(start, {
     pointerId: 4, clientX: 150, clientY: 150,
   }), false);
+});
+
+test('touch release suppresses the click after long press or movement', () => {
+  const touch = {
+    pointerType: 'touch', moved: false, longPressed: false, touchMode: 'open', noFlag: false,
+  };
+
+  assert.equal(touchReleaseAction(touch), 'click');
+  assert.equal(touchReleaseAction({ ...touch, touchMode: 'flag' }), 'flag');
+  assert.equal(touchReleaseAction({ ...touch, longPressed: true }), 'suppress');
+  assert.equal(touchReleaseAction({ ...touch, longPressed: true, touchMode: 'flag' }), 'suppress');
+  assert.equal(touchReleaseAction({ ...touch, moved: true }), 'suppress');
+  assert.equal(touchReleaseAction({ ...touch, touchMode: 'flag', noFlag: true }), 'click');
 });

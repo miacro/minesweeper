@@ -14,3 +14,10 @@ export function movedBeyondThreshold(start, event, threshold = TOUCH_MOVE_THRESH
   const deltaY = event.clientY - start.clientY;
   return deltaX * deltaX + deltaY * deltaY > threshold * threshold;
 }
+
+export function touchReleaseAction({ pointerType, moved, longPressed, touchMode, noFlag }) {
+  if (pointerType === 'mouse') return 'click';
+  if (moved || longPressed) return 'suppress';
+  if (!noFlag && touchMode === 'flag') return 'flag';
+  return 'click';
+}

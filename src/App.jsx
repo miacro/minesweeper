@@ -18,6 +18,7 @@ import {
   canCompleteMouseGesture,
   isPrimaryMouseGesture,
   movedBeyondThreshold,
+  touchReleaseAction,
 } from './input-logic.js';
 import { LEVELS, useMinesweeper } from './useMinesweeper.js';
 
@@ -122,7 +123,6 @@ function Cell({ cell, t, onOpen, onFlag, touchMode, noFlag, warmAudio }) {
     if (noFlag) return;
     longPressRef.current = window.setTimeout(() => {
       longPressedRef.current = true;
-      suppressNextClick();
       if (touchMode === 'flag') onOpen(cell.row, cell.col);
       else onFlag(cell.row, cell.col);
     }, 480);
@@ -142,12 +142,19 @@ function Cell({ cell, t, onOpen, onFlag, touchMode, noFlag, warmAudio }) {
     touchMovedRef.current = false;
     event.currentTarget.classList.remove('peek');
     window.clearTimeout(longPressRef.current);
-    if (event.pointerType !== 'mouse' && moved) {
+    const action = touchReleaseAction({
+      pointerType: event.pointerType,
+      moved,
+      longPressed: longPressedRef.current,
+      touchMode,
+      noFlag,
+    });
+    if (action === 'suppress') {
       event.preventDefault();
       suppressNextClick();
       return;
     }
-    if (!noFlag && event.pointerType !== 'mouse' && touchMode === 'flag' && !longPressedRef.current) {
+    if (action === 'flag') {
       event.preventDefault();
       suppressNextClick();
       onFlag(cell.row, cell.col);
@@ -545,7 +552,7 @@ function App() {
     const keyboard = (event) => {
       if (event.target.matches('input, select, button')) return;
       const key = event.key.toLowerCase();
-      if (key === 'r') newGame(game.settings, game.level);
+      if (key === 'r') retrySame();
       if (key === 'p') setPaused(!game.paused);
       if (key === 'h') setRecordsVisible((visible) => !visible);
       if (['1', '2', '3'].includes(key)) {
@@ -555,7 +562,7 @@ function App() {
     };
     document.addEventListener('keydown', keyboard);
     return () => document.removeEventListener('keydown', keyboard);
-  }, [game.level, game.paused, game.settings, newGame, setPaused]);
+  }, [game.paused, newGame, retrySame, setPaused]);
 
   const statusWidth = game.settings.cols * 24 + 8;
   const resetGame = () => {
