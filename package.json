@@ -7,7 +7,12 @@
     "dev": "vite",
     "build": "vite build",
     "preview": "vite preview",
-    "test": "node --test tests/*.test.mjs"
+    "test": "npm run test:unit && npm run test:browser",
+    "test:unit": "node --test tests/*.test.mjs",
+    "test:browser": "playwright test --project=chromium",
+    "test:browser:all": "playwright test",
+    "test:browser:install": "playwright install chromium",
+    "test:browser:install:all": "playwright install chromium webkit"
   },
   "keywords": [],
   "author": "",
@@ -17,6 +22,7 @@
     "react-dom": "^19.2.7"
   },
   "devDependencies": {
+    "@playwright/test": "^1.62.1",
     "@vitejs/plugin-react": "^6.0.2",
     "vite": "^8.0.16"
   }
