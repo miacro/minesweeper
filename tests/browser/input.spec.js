@@ -62,9 +62,56 @@ test('same-cell movement does not cancel the pending click', async ({ page }) =>
   });
   await expect(target).toHaveClass(/\bpeek\b/);
 
+  await page.evaluate((activePointerId) => {
+    const board = document.querySelector('.board');
+    if (board.hasPointerCapture(activePointerId)) board.releasePointerCapture(activePointerId);
+  }, pointerId);
+
   await page.mouse.move(point.x + 2, point.y + 2);
   await page.mouse.up();
   await expect(target).toHaveClass(/\brevealed\b/);
+});
+
+test('primary release tolerates stale buttons state', async ({ page }) => {
+  const target = cell(page, 0, 0);
+  const point = await centerOf(target);
+  await page.evaluate(() => {
+    const board = document.querySelector('.board');
+    board.addEventListener('pointerdown', (event) => {
+      window.__activeTestPointerId = event.pointerId;
+    }, { once: true });
+  });
+
+  await page.mouse.move(point.x, point.y);
+  await page.mouse.down();
+  const pointerId = await page.evaluate(() => window.__activeTestPointerId);
+  await page.evaluate(({ activePointerId, coordinates }) => {
+    document.body.dispatchEvent(new PointerEvent('pointerup', {
+      bubbles: true,
+      cancelable: true,
+      composed: true,
+      pointerType: 'mouse',
+      pointerId: activePointerId,
+      isPrimary: true,
+      button: -1,
+      buttons: 1,
+      clientX: coordinates.x,
+      clientY: coordinates.y,
+    }));
+    document.elementFromPoint(coordinates.x, coordinates.y).dispatchEvent(new MouseEvent('click', {
+      bubbles: true,
+      cancelable: true,
+      composed: true,
+      button: 0,
+      detail: 1,
+      clientX: coordinates.x,
+      clientY: coordinates.y,
+    }));
+  }, { activePointerId: pointerId, coordinates: point });
+
+  await expect(target).toHaveClass(/\brevealed\b/);
+  await page.mouse.move(1, 1);
+  await page.mouse.up();
 });
 
 test('Control-primary click never leaks into the reveal action', async ({ page }) => {
@@ -134,4 +181,49 @@ test('touch long press suppresses the click generated on release', async ({ page
 
   await expect(target).toHaveClass('cell');
   await expect(target).not.toHaveClass(/\brevealed\b/);
+});
+
+test('a second touch cannot schedule a duplicate long press', async ({ page }) => {
+  const target = cell(page, 0, 0);
+  const point = await centerOf(target);
+
+  await target.dispatchEvent('pointerdown', {
+    pointerType: 'touch', pointerId: 41, isPrimary: true, button: 0, buttons: 1,
+    clientX: point.x, clientY: point.y,
+  });
+  await target.dispatchEvent('pointerdown', {
+    pointerType: 'touch', pointerId: 42, isPrimary: false, button: 0, buttons: 1,
+    clientX: point.x + 1, clientY: point.y + 1,
+  });
+
+  await page.waitForTimeout(520);
+  await expect(target).toHaveClass(/\bflagged\b/);
+  await expect(target).not.toHaveClass(/\bquestioned\b/);
+
+  await target.dispatchEvent('pointercancel', {
+    pointerType: 'touch', pointerId: 41, isPrimary: true,
+  });
+});
+
+test('native touch context menu and custom long press share one action', async ({ page }) => {
+  const target = cell(page, 0, 0);
+  const point = await centerOf(target);
+
+  await target.dispatchEvent('pointerdown', {
+    pointerType: 'touch', pointerId: 51, isPrimary: true, button: 0, buttons: 1,
+    clientX: point.x, clientY: point.y,
+  });
+  await target.dispatchEvent('contextmenu', {
+    button: 0,
+    clientX: point.x,
+    clientY: point.y,
+  });
+
+  await page.waitForTimeout(520);
+  await expect(target).toHaveClass(/\bflagged\b/);
+  await expect(target).not.toHaveClass(/\bquestioned\b/);
+
+  await target.dispatchEvent('pointercancel', {
+    pointerType: 'touch', pointerId: 51, isPrimary: true,
+  });
 });

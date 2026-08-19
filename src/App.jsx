@@ -105,12 +105,19 @@ function Cell({ cell, t, onOpen, onFlag, touchMode, noFlag, warmAudio }) {
     window.clearTimeout(skipClickTimerRef.current);
   }, []);
 
+  const performLongPress = () => {
+    if (longPressedRef.current || noFlag) return;
+    longPressedRef.current = true;
+    if (touchMode === 'flag') onOpen(cell.row, cell.col);
+    else onFlag(cell.row, cell.col);
+  };
+
   const handlePointerDown = (event) => {
     if (event.pointerType === 'mouse') {
       longPressedRef.current = false;
       return;
     }
-    if (event.button !== 0) return;
+    if (event.button !== 0 || touchStartRef.current) return;
     warmAudio();
     touchStartRef.current = {
       pointerId: event.pointerId,
@@ -121,10 +128,9 @@ function Cell({ cell, t, onOpen, onFlag, touchMode, noFlag, warmAudio }) {
     longPressedRef.current = false;
     event.currentTarget.classList.add('peek');
     if (noFlag) return;
+    const pointerId = event.pointerId;
     longPressRef.current = window.setTimeout(() => {
-      longPressedRef.current = true;
-      if (touchMode === 'flag') onOpen(cell.row, cell.col);
-      else onFlag(cell.row, cell.col);
+      if (touchStartRef.current?.pointerId === pointerId) performLongPress();
     }, 480);
   };
 
@@ -137,6 +143,8 @@ function Cell({ cell, t, onOpen, onFlag, touchMode, noFlag, warmAudio }) {
   };
 
   const handlePointerUp = (event) => {
+    if (event.pointerType === 'mouse'
+      || touchStartRef.current?.pointerId !== event.pointerId) return;
     const moved = touchMovedRef.current;
     touchStartRef.current = null;
     touchMovedRef.current = false;
@@ -189,6 +197,11 @@ function Cell({ cell, t, onOpen, onFlag, touchMode, noFlag, warmAudio }) {
       }}
       onContextMenu={(event) => {
         event.preventDefault();
+        if (touchStartRef.current) {
+          window.clearTimeout(longPressRef.current);
+          if (!touchMovedRef.current) performLongPress();
+          return;
+        }
         if (longPressedRef.current) return;
         if (!noFlag) onFlag(cell.row, cell.col);
       }}
@@ -196,6 +209,8 @@ function Cell({ cell, t, onOpen, onFlag, touchMode, noFlag, warmAudio }) {
       onPointerMove={handlePointerMove}
       onPointerUp={handlePointerUp}
       onPointerCancel={(event) => {
+        if (event.pointerType === 'mouse'
+          || touchStartRef.current?.pointerId !== event.pointerId) return;
         touchStartRef.current = null;
         touchMovedRef.current = false;
         event.currentTarget.classList.remove('peek');
@@ -280,7 +295,7 @@ function Board({ game, t, openCell, toggleFlag, touchMode, warmAudio }) {
   };
 
   const handlePointerUp = (event) => {
-    if (event.pointerType !== 'mouse' || event.button !== 0) return;
+    if (event.pointerType !== 'mouse' || ![0, -1].includes(event.button)) return;
     if (!canCompleteMouseGesture(mousePointerRef.current, event)) {
       mousePointerRef.current = null;
       clearPreview();
@@ -299,6 +314,20 @@ function Board({ game, t, openCell, toggleFlag, touchMode, warmAudio }) {
     mousePointerRef.current = null;
     clearPreview();
   };
+
+  const handleLostPointerCapture = (event) => {
+    if (event.pointerType !== 'mouse' || mousePointerRef.current !== event.pointerId) return;
+    clearPreview();
+  };
+
+  useEffect(() => {
+    window.addEventListener('pointerup', handlePointerUp);
+    window.addEventListener('pointercancel', cancelMouseGesture);
+    return () => {
+      window.removeEventListener('pointerup', handlePointerUp);
+      window.removeEventListener('pointercancel', cancelMouseGesture);
+    };
+  });
 
   return (
     <div
@@ -323,7 +352,7 @@ function Board({ game, t, openCell, toggleFlag, touchMode, warmAudio }) {
       onPointerMove={handlePointerMove}
       onPointerUp={handlePointerUp}
       onPointerCancel={cancelMouseGesture}
-      onLostPointerCapture={cancelMouseGesture}
+      onLostPointerCapture={handleLostPointerCapture}
       onPointerLeave={(event) => {
         if (event.pointerType === 'mouse' && mousePointerRef.current !== null) clearPreview();
       }}

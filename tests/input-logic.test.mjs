@@ -10,13 +10,15 @@ import {
 
 test('mouse gestures require the same primary pointer to start inside the board', () => {
   const primary = {
-    pointerType: 'mouse', pointerId: 7, button: 0, ctrlKey: false,
+    pointerType: 'mouse', pointerId: 7, button: 0, buttons: 0, ctrlKey: false,
   };
 
   assert.equal(isPrimaryMouseGesture(primary), true);
   assert.equal(canCompleteMouseGesture(7, primary), true);
   assert.equal(canCompleteMouseGesture(null, primary), false);
   assert.equal(canCompleteMouseGesture(8, primary), false);
+  assert.equal(canCompleteMouseGesture(7, { ...primary, button: -1 }), true);
+  assert.equal(canCompleteMouseGesture(7, { ...primary, buttons: 1 }), true);
   assert.equal(isPrimaryMouseGesture({ ...primary, ctrlKey: true }), false);
   assert.equal(canCompleteMouseGesture(7, { ...primary, ctrlKey: true }), false);
   assert.equal(isPrimaryMouseGesture({ ...primary, button: 2 }), false);

@@ -5,7 +5,11 @@ export function isPrimaryMouseGesture(event) {
 }
 
 export function canCompleteMouseGesture(activePointerId, event) {
-  return activePointerId === event.pointerId && isPrimaryMouseGesture(event);
+  const isPrimaryRelease = event.button === 0 || event.button === -1;
+  return activePointerId === event.pointerId
+    && event.pointerType === 'mouse'
+    && isPrimaryRelease
+    && !event.ctrlKey;
 }
 
 export function movedBeyondThreshold(start, event, threshold = TOUCH_MOVE_THRESHOLD) {
