@@ -89,8 +89,15 @@ function Cell({ cell, t, onOpen, onFlag, touchMode, noFlag, warmAudio }) {
   const longPressedRef = useRef(false);
   const touchStartRef = useRef(null);
   const touchMovedRef = useRef(false);
+  const cancelledTouchRef = useRef(null);
+  const cancelledTouchTimerRef = useRef(null);
   const skipClickRef = useRef(false);
   const skipClickTimerRef = useRef(null);
+
+  const clearCancelledTouch = () => {
+    window.clearTimeout(cancelledTouchTimerRef.current);
+    cancelledTouchRef.current = null;
+  };
 
   const suppressNextClick = () => {
     window.clearTimeout(skipClickTimerRef.current);
@@ -102,6 +109,7 @@ function Cell({ cell, t, onOpen, onFlag, touchMode, noFlag, warmAudio }) {
 
   useEffect(() => () => {
     window.clearTimeout(longPressRef.current);
+    window.clearTimeout(cancelledTouchTimerRef.current);
     window.clearTimeout(skipClickTimerRef.current);
   }, []);
 
@@ -113,6 +121,7 @@ function Cell({ cell, t, onOpen, onFlag, touchMode, noFlag, warmAudio }) {
   };
 
   const handlePointerDown = (event) => {
+    clearCancelledTouch();
     if (event.pointerType === 'mouse') {
       longPressedRef.current = false;
       return;
@@ -202,6 +211,11 @@ function Cell({ cell, t, onOpen, onFlag, touchMode, noFlag, warmAudio }) {
           if (!touchMovedRef.current) performLongPress();
           return;
         }
+        if (cancelledTouchRef.current) {
+          clearCancelledTouch();
+          performLongPress();
+          return;
+        }
         if (longPressedRef.current) return;
         if (!noFlag) onFlag(cell.row, cell.col);
       }}
@@ -211,12 +225,18 @@ function Cell({ cell, t, onOpen, onFlag, touchMode, noFlag, warmAudio }) {
       onPointerCancel={(event) => {
         if (event.pointerType === 'mouse'
           || touchStartRef.current?.pointerId !== event.pointerId) return;
+        const shouldAwaitContextMenu = !touchMovedRef.current && !longPressedRef.current;
         touchStartRef.current = null;
         touchMovedRef.current = false;
         event.currentTarget.classList.remove('peek');
         window.clearTimeout(skipClickTimerRef.current);
         skipClickRef.current = false;
         window.clearTimeout(longPressRef.current);
+        clearCancelledTouch();
+        if (shouldAwaitContextMenu) {
+          cancelledTouchRef.current = true;
+          cancelledTouchTimerRef.current = window.setTimeout(clearCancelledTouch, 1000);
+        }
       }}
     >
       {cell.questioned ? '?' : cell.revealed && !cell.mine && cell.adjacent > 0 ? cell.adjacent : ''}

@@ -227,3 +227,28 @@ test('native touch context menu and custom long press share one action', async (
     pointerType: 'touch', pointerId: 51, isPrimary: true,
   });
 });
+
+test('touch context menu keeps its long-press action after pointer cancellation', async ({ page }) => {
+  await page.evaluate(() => localStorage.setItem('minesweeperTouchMode', 'flag'));
+  await page.reload();
+  await expect(page.locator('.board')).toBeVisible();
+  const target = cell(page, 0, 0);
+  const point = await centerOf(target);
+
+  await target.dispatchEvent('pointerdown', {
+    pointerType: 'touch', pointerId: 61, isPrimary: true, button: 0, buttons: 1,
+    clientX: point.x, clientY: point.y,
+  });
+  await target.dispatchEvent('pointercancel', {
+    pointerType: 'touch', pointerId: 61, isPrimary: true,
+    clientX: point.x, clientY: point.y,
+  });
+  await target.dispatchEvent('contextmenu', {
+    button: 0,
+    clientX: point.x,
+    clientY: point.y,
+  });
+
+  await expect(target).toHaveClass(/\brevealed\b/);
+  await expect(target).not.toHaveClass(/\bflagged\b/);
+});
