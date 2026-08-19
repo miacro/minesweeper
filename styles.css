@@ -522,8 +522,7 @@ p {
   cursor: default;
 }
 
-.cell:not(.revealed):active,
-.cell.peek {
+.cell:not(.revealed).peek {
   border: 2px solid #808080;
   background: #bebebe;
   padding-top: 1px;

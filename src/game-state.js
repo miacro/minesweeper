@@ -75,6 +75,30 @@ export function revealCellsAt(cells, settings, coordinates) {
   return { cells: next, revealed, exploded: false };
 }
 
+export function findChordCandidates(cells, settings, row, col) {
+  const cell = cells[row]?.[col];
+  if (!cell?.revealed || cell.adjacent === 0) return [];
+
+  const around = neighborCoordinates(row, col, settings.rows, settings.cols);
+  return around.filter(([nextRow, nextCol]) => {
+    const target = cells[nextRow][nextCol];
+    return !target.revealed && !target.flagged && !target.questioned;
+  });
+}
+
+export function findChordTargets(cells, settings, row, col) {
+  const cell = cells[row]?.[col];
+  if (!cell?.revealed || cell.adjacent === 0) return [];
+
+  const around = neighborCoordinates(row, col, settings.rows, settings.cols);
+  const flagCount = around.filter(([nextRow, nextCol]) => (
+    cells[nextRow][nextCol].flagged
+  )).length;
+  return flagCount === cell.adjacent
+    ? findChordCandidates(cells, settings, row, col)
+    : [];
+}
+
 export function revealAllMines(cells) {
   const next = cloneCells(cells);
   next.flat().forEach((cell) => {

@@ -12,6 +12,7 @@ import {
   writeJson,
   writeText,
 } from '../modules/storage.js';
+import { findChordCandidates } from './game-state.js';
 import { LEVELS, useMinesweeper } from './useMinesweeper.js';
 
 const SEGMENTS = {
@@ -76,10 +77,9 @@ function Counter({ value, label }) {
   );
 }
 
-function Cell({ cell, t, onOpen, onFlag, onChord, touchMode, noFlag, warmAudio }) {
+function Cell({ cell, t, onOpen, onFlag, touchMode, noFlag, warmAudio }) {
   const longPressRef = useRef(null);
   const longPressedRef = useRef(false);
-  const mousePointerRef = useRef(null);
   const skipClickRef = useRef(false);
   const skipClickTimerRef = useRef(null);
 
@@ -97,13 +97,9 @@ function Cell({ cell, t, onOpen, onFlag, onChord, touchMode, noFlag, warmAudio }
   }, []);
 
   const handlePointerDown = (event) => {
+    if (event.pointerType === 'mouse') return;
     warmAudio();
-    if (event.pointerType === 'mouse') {
-      if (event.button !== 0) return;
-      mousePointerRef.current = event.pointerId;
-      event.currentTarget.setPointerCapture(event.pointerId);
-      return;
-    }
+    event.currentTarget.classList.add('peek');
     if (noFlag) return;
     longPressedRef.current = false;
     longPressRef.current = window.setTimeout(() => {
@@ -115,14 +111,8 @@ function Cell({ cell, t, onOpen, onFlag, onChord, touchMode, noFlag, warmAudio }
   };
 
   const handlePointerUp = (event) => {
+    event.currentTarget.classList.remove('peek');
     window.clearTimeout(longPressRef.current);
-    if (event.pointerType === 'mouse' && event.pointerId === mousePointerRef.current) {
-      mousePointerRef.current = null;
-      suppressNextClick();
-      const target = document.elementFromPoint(event.clientX, event.clientY)?.closest('.cell');
-      if (target) onOpen(Number(target.dataset.row), Number(target.dataset.col));
-      return;
-    }
     if (!noFlag && event.pointerType !== 'mouse' && touchMode === 'flag' && !longPressedRef.current) {
       event.preventDefault();
       suppressNextClick();
@@ -156,15 +146,14 @@ function Cell({ cell, t, onOpen, onFlag, onChord, touchMode, noFlag, warmAudio }
         }
         onOpen(cell.row, cell.col);
       }}
-      onDoubleClick={() => onChord(cell.row, cell.col)}
       onContextMenu={(event) => {
         event.preventDefault();
         if (!noFlag) onFlag(cell.row, cell.col);
       }}
       onPointerDown={handlePointerDown}
       onPointerUp={handlePointerUp}
-      onPointerCancel={() => {
-        mousePointerRef.current = null;
+      onPointerCancel={(event) => {
+        event.currentTarget.classList.remove('peek');
         window.clearTimeout(skipClickTimerRef.current);
         skipClickRef.current = false;
         window.clearTimeout(longPressRef.current);
@@ -175,9 +164,99 @@ function Cell({ cell, t, onOpen, onFlag, onChord, touchMode, noFlag, warmAudio }
   );
 }
 
-function Board({ game, t, openCell, toggleFlag, chord, touchMode, warmAudio }) {
+function Board({ game, t, openCell, toggleFlag, touchMode, warmAudio }) {
+  const boardRef = useRef(null);
+  const previewTargetRef = useRef(null);
+  const previewCellsRef = useRef([]);
+  const mousePointerRef = useRef(null);
+  const skipMouseClickRef = useRef(false);
+  const skipMouseClickTimerRef = useRef(null);
+
+  const cellAtPoint = (clientX, clientY) => {
+    const target = document.elementFromPoint(clientX, clientY)?.closest('.cell');
+    return target && boardRef.current?.contains(target) ? target : null;
+  };
+
+  const clearPreview = () => {
+    previewCellsRef.current.forEach((cell) => cell.classList.remove('peek'));
+    previewCellsRef.current = [];
+    previewTargetRef.current = null;
+  };
+
+  const showPreview = (target) => {
+    if (previewTargetRef.current === target) return;
+    clearPreview();
+    if (!target || game.gameOver) return;
+
+    previewTargetRef.current = target;
+    const row = Number(target.dataset.row);
+    const col = Number(target.dataset.col);
+    const cell = game.cells[row]?.[col];
+    if (!cell) return;
+
+    if (!cell.revealed) {
+      if (!cell.flagged && !cell.questioned) previewCellsRef.current = [target];
+    } else {
+      previewCellsRef.current = findChordCandidates(game.cells, game.settings, row, col)
+        .map(([nextRow, nextCol]) => boardRef.current?.querySelector(
+          `.cell[data-row="${nextRow}"][data-col="${nextCol}"]`,
+        ))
+        .filter(Boolean);
+    }
+    previewCellsRef.current.forEach((previewCell) => previewCell.classList.add('peek'));
+  };
+
+  const suppressMouseClick = () => {
+    window.clearTimeout(skipMouseClickTimerRef.current);
+    skipMouseClickRef.current = true;
+    skipMouseClickTimerRef.current = window.setTimeout(() => {
+      skipMouseClickRef.current = false;
+    }, 500);
+  };
+
+  useEffect(() => () => {
+    clearPreview();
+    window.clearTimeout(skipMouseClickTimerRef.current);
+  }, []);
+
+  const handlePointerDown = (event) => {
+    if (event.pointerType !== 'mouse' || event.button !== 0) return;
+    const target = cellAtPoint(event.clientX, event.clientY);
+    if (!target) return;
+    warmAudio();
+    mousePointerRef.current = event.pointerId;
+    event.currentTarget.setPointerCapture(event.pointerId);
+    showPreview(target);
+  };
+
+  const handlePointerMove = (event) => {
+    if (event.pointerType !== 'mouse' || mousePointerRef.current === null) return;
+    if ((event.buttons & 1) === 0) {
+      mousePointerRef.current = null;
+      clearPreview();
+      return;
+    }
+    showPreview(cellAtPoint(event.clientX, event.clientY));
+  };
+
+  const handlePointerUp = (event) => {
+    if (event.pointerType !== 'mouse' || event.button !== 0) return;
+    const target = cellAtPoint(event.clientX, event.clientY);
+    mousePointerRef.current = null;
+    clearPreview();
+    suppressMouseClick();
+    if (target) openCell(Number(target.dataset.row), Number(target.dataset.col));
+  };
+
+  const cancelMouseGesture = (event) => {
+    if (event.pointerType !== 'mouse') return;
+    mousePointerRef.current = null;
+    clearPreview();
+  };
+
   return (
     <div
+      ref={boardRef}
       className={[
         'board',
         game.paused && 'is-paused',
@@ -187,6 +266,21 @@ function Board({ game, t, openCell, toggleFlag, chord, touchMode, warmAudio }) {
       role="grid"
       aria-label={t('board')}
       style={{ gridTemplateColumns: `repeat(${game.settings.cols}, 24px)` }}
+      onClickCapture={(event) => {
+        if (!skipMouseClickRef.current || event.detail === 0) return;
+        window.clearTimeout(skipMouseClickTimerRef.current);
+        skipMouseClickRef.current = false;
+        event.preventDefault();
+        event.stopPropagation();
+      }}
+      onPointerDown={handlePointerDown}
+      onPointerMove={handlePointerMove}
+      onPointerUp={handlePointerUp}
+      onPointerCancel={cancelMouseGesture}
+      onLostPointerCapture={cancelMouseGesture}
+      onPointerLeave={(event) => {
+        if (event.pointerType === 'mouse' && mousePointerRef.current !== null) clearPreview();
+      }}
     >
       {game.cells.flat().map((cell) => (
         <Cell
@@ -195,7 +289,6 @@ function Board({ game, t, openCell, toggleFlag, chord, touchMode, warmAudio }) {
           t={t}
           onOpen={openCell}
           onFlag={toggleFlag}
-          onChord={chord}
           touchMode={touchMode}
           noFlag={game.noFlag}
           warmAudio={warmAudio}
@@ -343,7 +436,7 @@ function App() {
   const {
     game, seconds, flags, bestTime, bestList, history,
     noGuess, noFlag, sound, volume, touchMode, soundPlayer,
-    newGame, retrySame, openCell, toggleFlag, chord, setPaused,
+    newGame, retrySame, openCell, toggleFlag, setPaused,
     serialize, restore, clearHistory, setHistory, settingsActions,
   } = gameApi;
   const [settingsVisible, setSettingsVisible] = useState(false);
@@ -594,7 +687,7 @@ function App() {
                 </span>
                 <Counter value={seconds} label={t('elapsed')} />
               </div>
-              <Board game={game} t={t} openCell={openCell} toggleFlag={toggleFlag} chord={chord} touchMode={touchMode} warmAudio={() => soundPlayer.warm()} />
+              <Board game={game} t={t} openCell={openCell} toggleFlag={toggleFlag} touchMode={touchMode} warmAudio={() => soundPlayer.warm()} />
             </div>
             <RecordsPanel
               visible={recordsVisible}

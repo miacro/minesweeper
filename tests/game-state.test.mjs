@@ -6,6 +6,8 @@ import {
   countFlags,
   countRevealedSafe,
   createCells,
+  findChordCandidates,
+  findChordTargets,
   revealCells,
   revealCellsAt,
 } from '../src/game-state.js';
@@ -42,6 +44,26 @@ test('flag counting reflects cell markers', () => {
   board[0][0].flagged = true;
   board[2][3].flagged = true;
   assert.equal(countFlags(board), 2);
+});
+
+test('chord preview shows candidates before the flag count matches', () => {
+  const settings = { rows: 3, cols: 3, mines: 1 };
+  const board = createCells(settings);
+  board[1][1].revealed = true;
+  board[1][1].adjacent = 1;
+  board[0][0].flagged = true;
+  board[0][1].questioned = true;
+  board[0][2].revealed = true;
+
+  const candidates = findChordCandidates(board, settings, 1, 1);
+
+  assert.deepEqual(candidates, [[1, 0], [1, 2], [2, 0], [2, 1], [2, 2]]);
+  assert.deepEqual(findChordTargets(board, settings, 1, 1), candidates);
+  board[0][0].flagged = false;
+  assert.deepEqual(findChordCandidates(board, settings, 1, 1), [
+    [0, 0], [1, 0], [1, 2], [2, 0], [2, 1], [2, 2],
+  ]);
+  assert.deepEqual(findChordTargets(board, settings, 1, 1), []);
 });
 
 test('revealing multiple cells stops after the first explosion', () => {

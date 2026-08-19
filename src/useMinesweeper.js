@@ -1,7 +1,7 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 
 import { createSoundPlayer } from '../modules/audio.js';
-import { generateMineLayoutAsync, neighborCoordinates } from '../modules/game-logic.js';
+import { generateMineLayoutAsync } from '../modules/game-logic.js';
 import {
   readJson,
   readText,
@@ -23,6 +23,7 @@ import {
   countFlags,
   countRevealedSafe,
   createCells,
+  findChordTargets,
   revealAllMines,
   revealCells,
   revealCellsAt,
@@ -349,17 +350,8 @@ export function useMinesweeper({ t }) {
 
   const chord = useCallback((row, col) => {
     const current = gameRef.current;
-    const cell = current.cells[row]?.[col];
-    if (!cell?.revealed || cell.adjacent === 0 || current.paused || current.gameOver) return;
-    const around = neighborCoordinates(row, col, current.settings.rows, current.settings.cols);
-    const flagCount = around.filter(([nextRow, nextCol]) => (
-      current.cells[nextRow][nextCol].flagged
-    )).length;
-    if (flagCount !== cell.adjacent) return;
-    const targets = around.filter(([nextRow, nextCol]) => {
-      const target = current.cells[nextRow][nextCol];
-      return !target.revealed && !target.flagged && !target.questioned;
-    });
+    if (current.paused || current.gameOver) return;
+    const targets = findChordTargets(current.cells, current.settings, row, col);
     if (targets.length === 0) return;
 
     const result = revealCellsAt(current.cells, current.settings, targets);
